@@ -145,13 +145,15 @@ export default function BlocklyWorkspace({ onCodeChange }: { onCodeChange: (code
         };
         window.addEventListener('resize', handleResize);
 
-        // Add default block
+        // Workspace initially empty to allow user to start fresh
+        /*
         Blockly.Xml.domToWorkspace(
             Blockly.utils.xml.textToDom(
                 '<xml><block type="text_print" x="50" y="50"><value name="TEXT"><block type="text"><field name="TEXT">Hello, Mistral!</field></block></value><next><block type="magic_block"><field name="PROMPT">make it explode with sparkles</field></block></next></block></xml>'
             ),
             workspaceRef.current
         );
+        */
 
         const onWorkspaceChange = (event: any) => {
             // Don't run code generation on every minor UI event to boost performance

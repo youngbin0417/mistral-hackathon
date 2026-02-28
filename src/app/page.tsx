@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { SandpackProvider, SandpackLayout, SandpackPreview, SandpackCodeEditor } from "@codesandbox/sandpack-react";
-import { Play, Code, X } from "lucide-react";
+import { SandpackProvider, SandpackLayout, SandpackPreview, SandpackCodeEditor, useSandpack } from "@codesandbox/sandpack-react";
+import { Play, Code, X, Sparkles, AlertCircle } from "lucide-react";
 import dynamic from 'next/dynamic';
 
 const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), {
@@ -27,6 +27,9 @@ export default function Home() {
   const [injectedLibs, setInjectedLibs] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isHealing, setIsHealing] = useState(false);
+  const [healingMessage, setHealingMessage] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const handleCodeChange = async (newCode: string) => {
     // Check if the generated code contains an AI request
@@ -70,6 +73,49 @@ export default function Home() {
     }
   };
 
+  // --- Self Healing Component ---
+  const SelfHealer = () => {
+    const { sandpack } = useSandpack();
+    const runtimeError = sandpack.error;
+
+    React.useEffect(() => {
+      if (runtimeError && runtimeError.message !== lastError && !isHealing) {
+        handleHeal(runtimeError.message);
+      }
+    }, [runtimeError]);
+
+    return null;
+  };
+
+  const handleHeal = async (errorMessage: string) => {
+    setLastError(errorMessage);
+    setIsHealing(true);
+    setHealingMessage("Detecting error... AI is fixing it! ✨");
+
+    try {
+      const response = await fetch('/api/heal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: errorMessage, code })
+      });
+
+      const data = await response.json();
+      if (data.fixedCode) {
+        setHealingMessage(data.explanation || "I fixed the bug! Re-running...");
+        // Delay slightly so the user can see the explanation
+        setTimeout(() => {
+          setCode(data.fixedCode);
+          setIsHealing(false);
+          setHealingMessage(null);
+        }, 3000);
+      }
+    } catch (err) {
+      console.error("Healing failed:", err);
+      setIsHealing(false);
+      setHealingMessage(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen min-h-screen p-4 bg-gray-950 text-white font-sans">
       <header className="mb-4 flex items-center justify-between">
@@ -92,9 +138,19 @@ export default function Home() {
               Codestral is brewing magic...
             </span>
           )}
-          <div className="text-sm text-gray-400 border border-gray-800 px-3 py-1 rounded-full">Phase 3 AI Libraries</div>
+          <div className="text-sm text-gray-400 border border-gray-800 px-3 py-1 rounded-full">Phase 5 Self-Healing</div>
         </div>
       </header>
+
+      {/* Healing Notification Overlay */}
+      {healingMessage && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] animate-bounce">
+          <div className="bg-pink-600 border-2 border-white text-white px-6 py-3 rounded-full shadow-[0_0_30px_rgba(236,72,153,0.6)] flex items-center gap-3">
+            <Sparkles className="animate-spin" size={20} />
+            <span className="font-bold">{healingMessage}</span>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-1 gap-4 overflow-hidden">
         {/* Blockly Area */}
@@ -141,6 +197,8 @@ export default function Home() {
                 />
               </SandpackLayout>
 
+              <SelfHealer />
+
               {/* Massive Preview Modal */}
               {isPreviewModalOpen && (
                 <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black bg-opacity-80 p-6 backdrop-blur-md">
@@ -159,6 +217,13 @@ export default function Home() {
                   </div>
                   {/* Modal Body */}
                   <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-pink-500 rounded-b-xl overflow-hidden relative shadow-[0_0_50px_rgba(236,72,153,0.2)]">
+                    {isHealing && (
+                      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
+                        <AlertCircle className="text-pink-500 mb-4 animate-pulse" size={48} />
+                        <h4 className="text-2xl font-bold text-white mb-2 underline decoration-pink-500">Self-Healing in Progress</h4>
+                        <p className="text-pink-300 text-lg italic animate-pulse">"{healingMessage}"</p>
+                      </div>
+                    )}
                     <SandpackPreview
                       showNavigator={false}
                       showOpenInCodeSandbox={false}
