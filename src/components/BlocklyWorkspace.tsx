@@ -125,9 +125,22 @@ Blockly.Blocks['create_sprite'] = {
 Blockly.Blocks['when_clicked'] = {
     init: function () {
         this.jsonInit({
-            "message0": "When Clicked",
-            "nextStatement": null,
-            "colour": "#FFBF00"
+            "message0": "When Clicked %1",
+            "args0": [{ "type": "input_statement", "name": "STACK" }],
+            "colour": "#FFBF00",
+            "tooltip": "Code inside will run once when screen is clicked"
+        });
+    }
+};
+
+// Event: Always (Every Frame)
+Blockly.Blocks['always_loop'] = {
+    init: function () {
+        this.jsonInit({
+            "message0": "Always (Every Frame) %1",
+            "args0": [{ "type": "input_statement", "name": "STACK" }],
+            "colour": "#FFBF00",
+            "tooltip": "Code inside will run 60 times per second"
         });
     }
 };
@@ -135,9 +148,11 @@ Blockly.Blocks['when_clicked'] = {
 // Define code generation for the Magic Block
 javascriptGenerator.forBlock['magic_block'] = function (block: any) {
     const prompt = block.getFieldValue('PROMPT');
-    // At this phase, we just emit a comment/log.
-    // The server-side / execution code will eventually use this prompt.
-    const code = `\n/* ✨ AI Request: "${prompt}" */\nconsole.log('✨ Magic Triggered for: "${prompt}"');\n`;
+    // Wrap in its own block scope to avoid naming conflicts with multiple magic blocks
+    const code = `\n/* ✨ AI Request: "${prompt}" */\n{ console.log('✨ Magic Triggered for: "${prompt}"'); }\n`;
+    if (block.getSvgRoot()) {
+        block.getSvgRoot().classList.add('magic-block-glow');
+    }
     return code;
 };
 
@@ -165,8 +180,13 @@ javascriptGenerator.forBlock['create_sprite'] = function (block: any) {
 };
 
 javascriptGenerator.forBlock['when_clicked'] = function (block: any) {
-    const branch = javascriptGenerator.statementToCode(block, 'STACK');
+    const branch = javascriptGenerator.statementToCode(block, 'STACK') || "";
     return `document.getElementById('app').onclick = function() {\n${branch}};\n`;
+};
+
+javascriptGenerator.forBlock['always_loop'] = function (block: any) {
+    const branch = javascriptGenerator.statementToCode(block, 'STACK') || "";
+    return `window.onFrame = function() {\n${branch}};\n`;
 };
 
 // Override default print block to use console.log instead of window.alert
@@ -175,7 +195,7 @@ javascriptGenerator.forBlock['text_print'] = function (block: any) {
     return 'console.log(' + msg + ');\n';
 };
 
-export default function BlocklyWorkspace({ onCodeChange }: { onCodeChange: (code: string) => void }) {
+export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }: { onCodeChange: (code: string) => void, isGenerating?: boolean }) {
     const blocklyDiv = useRef<HTMLDivElement>(null);
     const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
 
@@ -207,6 +227,7 @@ export default function BlocklyWorkspace({ onCodeChange }: { onCodeChange: (code
           </category>
           <category name="Events" colour="#FFBF00">
             <block type="when_clicked"></block>
+            <block type="always_loop"></block>
           </category>
           <category name="Logic" colour="#5b80a5">
             <block type="controls_if"></block>
@@ -258,5 +279,5 @@ export default function BlocklyWorkspace({ onCodeChange }: { onCodeChange: (code
         };
     }, []);
 
-    return <div ref={blocklyDiv} className="absolute inset-0 w-full h-full" />;
+    return <div ref={blocklyDiv} className={`absolute inset-0 w-full h-full ${isGenerating ? 'blockly-generating' : ''}`} />;
 }

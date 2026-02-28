@@ -42,16 +42,20 @@ This plan outlines the 48-hour development roadmap for **Mistral Snap & Build**,
 3. **Context Injection**
    - Improve the AI prompt to include current variables and sprite states for better code accuracy.
 
-## Phase 4: Final Polish (Hours 36-48) - UI/UX & Aesthetics
+## Phase 4: Final Polish (Hours 36-48) - ✅ COMPLETED
 *Goal: The "Wow" factor. Cyberpunk vibe and smooth animations.*
 
-1. **Cyberpunk Theme (FR-UI-003)**
+1. **Cyberpunk Theme (FR-UI-003)** - ✅ Done
    - Override Blockly CSS for neon borders and dark backgrounds.
    - Add glassmorphism to the sidebar and panels.
-2. **AI Status & Transitions (FR-UI-002/005)**
+2. **AI Status & Transitions (FR-UI-002/005)** - ✅ Done
    - Pulsing animations for the Magic Block during generation.
-   - AI status bar showing "Interpreting...", "Coding...", etc.
-3. **Code View & Export (FR-UI-001)**
-   - Add a syntax-highlighted modal to view the raw generated JS code.
+   - AI status bar showing "AI Neural Processing..." with scanline.
+3. **Resizable Layout / Code View (FR-UI-004)** - ✅ Done
+   - Split-pane layout with `react-resizable-panels`.
+   - Advanced "Live Engine Code" panel.
 
 ---
+
+## Next Steps
+See [remaining_tasks.md](file:///c:/Projects/hack/remaining_tasks.md) for the final demo refinement list.

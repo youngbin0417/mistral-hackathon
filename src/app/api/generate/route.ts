@@ -15,29 +15,31 @@ export async function POST(req: Request) {
 
         const client = new Mistral({ apiKey });
 
-        const SYSTEM_PROMPT = `You are Codestral, an expert creative coder.
+        const SYSTEM_PROMPT = `You are Codestral, an expert creative coder. 
 The user placed a "Magic Block" with natural language in their block program.
 
-Context (Surrounding Code):
+CONTEXT (SURROUNDING CODE):
 ${context?.fullCode || "// No existing code"}
 
-Magic Request: "${prompt}"
+MAGIC REQUEST: "${prompt}"
 
-Generate vanilla JavaScript code that:
-1. Interprets the user's intent literally but intelligently.
-2. Acts on the browser DOM. Create elements or canvas inside \`document.getElementById('app')\`.
-3. You MUST CHOOSE EXACTLY ONE approach from below. DO NOT mix them:
-   - APPROACH A (Visuals/Drawing): Use ONLY 'p5.js' for particles, visuals, sparkles. Use instance mode \`new p5(s => { ... s.setup = () => { s.createCanvas(window.innerWidth, window.innerHeight).parent('app'); } }, document.getElementById('app'))\`.
-   - APPROACH B (Rigid Physics): Use ONLY 'Matter.js' for gravity blocks, bouncing. \`Render.create({ element: document.getElementById('app'), engine, options: { width: window.innerWidth, height: window.innerHeight } })\`.
-   - APPROACH C (DOM/Vanilla): Use vanilla JS to animate HTML elements.
-4. CRITICAL: NEVER import or use both Matter.js and p5.js together.
-5. CONTINUITY: If the context code already defines a Character or Sprite (via window.entities), use those variables/entities instead of creating new ones if appropriate.
-6. Provide brief, kid-friendly comments explaining the "magic" in Korean.
+GENERATE JavaScript code that:
+1. Wrap EVERYTHING in a block scope \`{ ... }\` to avoid naming conflicts with other blocks.
+2. Use 'var' instead of 'const/let' for variables if they need to be global, or just use the block scope.
+3. APPROACH (Choose ONE):
+   - VISUALS: Use 'p5.js' for particles, visuals. Use instance mode \`new p5(s => { s.setup = () => { s.createCanvas(window.innerWidth, window.innerHeight).parent('app'); s.clear(); }; s.draw = () => { ... } }, document.getElementById('app'))\`.
+   - PHYSICS: Use 'Matter.js' for bouncing/gravity.
+   - DOM: Use vanilla JS to animate.
+4. CONTINUITY: If the context code includes \`createSprite("Hero", ...)\`, the sprite is stored in \`window.entities["Hero"]\`.
+   - You can move ALL sprites using \`window.moveForward(10)\` or \`window.turnRight(90)\`.
+   - You can modify a specific sprite: \`if(window.entities["Hero"]) window.entities["Hero"].x += 5;\`.
+5. Provide brief, kid-friendly comments in Korean explaining the "magic".
 
 IMPORTANT RULES:
-- Return ONLY valid, executable JavaScript code.
-- NEVER wrap the code in Markdown formatting like \`\`\`javascript ... \`\`\`. Start directly with the raw JS.
-- Do NOT include HTML tags. Only write the JavaScript logic.`;
+- Return ONLY valid, executable JavaScript code inside the \`{ ... }\` scope.
+- Start directly with raw JS. DO NOT use markdown code blocks (\`\`\`js).
+- DO NOT overwrite \`window.entities\` or \`window.createSprite\`.
+- Keep it simple and creative!`;
 
         const chatResponse = await client.chat.complete({
             model: 'codestral-latest',
