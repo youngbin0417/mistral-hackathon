@@ -31,6 +31,43 @@ Blockly.Blocks['magic_block'] = {
     }
 };
 
+// Movement: Move Forward
+Blockly.Blocks['move_forward'] = {
+    init: function () {
+        this.jsonInit({
+            "message0": "Move Forward %1 units",
+            "args0": [{ "type": "field_number", "name": "AMOUNT", "value": 10 }],
+            "previousStatement": null,
+            "nextStatement": null,
+            "colour": "#4C97FF"
+        });
+    }
+};
+
+// Movement: Turn
+Blockly.Blocks['turn_right'] = {
+    init: function () {
+        this.jsonInit({
+            "message0": "Turn Right %1 degrees",
+            "args0": [{ "type": "field_number", "name": "DEGREES", "value": 90 }],
+            "previousStatement": null,
+            "nextStatement": null,
+            "colour": "#4C97FF"
+        });
+    }
+};
+
+// Event: When Clicked
+Blockly.Blocks['when_clicked'] = {
+    init: function () {
+        this.jsonInit({
+            "message0": "When Clicked",
+            "nextStatement": null,
+            "colour": "#FFBF00"
+        });
+    }
+};
+
 // Define code generation for the Magic Block
 javascriptGenerator.forBlock['magic_block'] = function (block: any) {
     const prompt = block.getFieldValue('PROMPT');
@@ -38,6 +75,22 @@ javascriptGenerator.forBlock['magic_block'] = function (block: any) {
     // The server-side / execution code will eventually use this prompt.
     const code = `\n/* ✨ AI Request: "${prompt}" */\nconsole.log('✨ Magic Triggered for: "${prompt}"');\n`;
     return code;
+};
+
+// Movement Generators
+javascriptGenerator.forBlock['move_forward'] = function (block: any) {
+    const amount = block.getFieldValue('AMOUNT');
+    return `if(typeof moveForward === "function") moveForward(${amount});\n`;
+};
+
+javascriptGenerator.forBlock['turn_right'] = function (block: any) {
+    const degrees = block.getFieldValue('DEGREES');
+    return `if(typeof turnRight === "function") turnRight(${degrees});\n`;
+};
+
+javascriptGenerator.forBlock['when_clicked'] = function (block: any) {
+    const branch = javascriptGenerator.statementToCode(block, 'STACK');
+    return `document.getElementById('app').onclick = function() {\n${branch}};\n`;
 };
 
 // Override default print block to use console.log instead of window.alert
@@ -66,11 +119,18 @@ export default function BlocklyWorkspace({ onCodeChange }: { onCodeChange: (code
           <category name="✨ AI Magic" colour="290">
             <block type="magic_block"></block>
           </category>
+          <category name="Movement" colour="#4C97FF">
+            <block type="move_forward"></block>
+            <block type="turn_right"></block>
+          </category>
+          <category name="Events" colour="#FFBF00">
+            <block type="when_clicked"></block>
+          </category>
           <category name="Logic" colour="#5b80a5">
             <block type="controls_if"></block>
             <block type="logic_compare"></block>
           </category>
-          <category name="Actions" colour="#a55b80">
+          <category name="Math/Text" colour="#a55b80">
             <block type="math_number"></block>
             <block type="text_print"></block>
             <block type="text"></block>
