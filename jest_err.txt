@@ -1,0 +1,81 @@
+﻿node.exe : FAIL __tests__/lib
+/customBlocks.test.ts
+위치 C:\Program Files\nodejs\np
+x.ps1:29 문자:3
++   & $NODE_EXE $NPX_CLI_JS $
+args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo           
+   : NotSpecified: (FAIL __  
+  tests__/lib/customBlocks   
+ .test.ts:String) [], Rem    
+oteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+  ??Test suite failed to run
+
+    ReferenceError: TextEncod
+er is not defined
+
+    [0m [90m 3 |[39m [36m
+import[39m { initializeCusto
+mBlocks } [36mfrom[39m [32
+m'@/lib/customBlocks'[39m[3
+3m;[39m
+     [90m 4 |[39m
+    [31m[1m>[22m[39m[90m
+ 5 |[39m describe([32m'Cust
+om Blocks Integration'[39m[
+33m,[39m () [33m=>[39m {
+     [90m   |[39m          
+                             
+                [31m[1m^[2
+2m[39m
+     [90m 6 |[39m     befor
+eAll(() [33m=>[39m {
+     [90m 7 |[39m         
+[90m// Mock DOM for Blockly i
+f necessary, or just run head
+less[39m
+     [90m 8 |[39m         i
+nitializeCustomBlocks()[33m;
+[39m[0m
+
+      at Object.<anonymous> (
+node_modules/whatwg-url/lib/e
+ncoding.js:2:21)
+      at Object.<anonymous> (
+node_modules/whatwg-url/lib/u
+rl-state-machine.js:5:34)
+      at Object.<anonymous> (
+node_modules/whatwg-url/lib/U
+RL-impl.js:2:13)
+      at Object.<anonymous> (
+node_modules/whatwg-url/lib/U
+RL.js:499:14)
+      at Object.<anonymous> (
+node_modules/whatwg-url/webid
+l2js-wrapper.js:3:13)
+      at Object.<anonymous> (
+node_modules/whatwg-url/index
+.js:3:34)
+      at Object.<anonymous> (
+node_modules/jsdom/lib/api.js
+:7:19)
+      at Object.<anonymous> (
+node_modules/blockly/core-nod
+e.js:22:17)
+      at Object.<anonymous> (
+__tests__/lib/customBlocks.te
+st.ts:5:55)
+
+Test Suites: 1 failed, 1 tota
+l
+Tests:       0 total
+Snapshots:   0 total
+Time:        1.472 s
+Ran all test suites matching 
+__tests__/lib/customBlocks.te
+st.ts.

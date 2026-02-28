@@ -6,6 +6,7 @@ import 'blockly/blocks';
 import * as En from 'blockly/msg/en';
 import { javascriptGenerator, Order } from 'blockly/javascript';
 import DarkTheme from '@blockly/theme-dark';
+import { initializeCustomBlocks } from '@/lib/customBlocks';
 
 Blockly.setLocale(En as any);
 
@@ -207,6 +208,9 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
     }, [onCodeChange]);
 
     useEffect(() => {
+        // Initialize all our custom extensions
+        initializeCustomBlocks();
+
         if (!blocklyDiv.current) return;
         if (workspaceRef.current) return;
 
@@ -215,18 +219,26 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
         <xml xmlns="https://developers.google.com/blockly/xml">
           <category name="✨ AI Magic" colour="#ff00ff">
             <block type="magic_block"></block>
+            <block type="magic_condition"></block>
+            <block type="magic_styles"></block>
           </category>
-          <category name="Character" colour="#00f0ff">
+          <category name="🎨 Visuals & Art" colour="#ff0066">
+            <block type="draw_shape"></block>
+            <block type="explode_particles"></block>
+          </category>
+          <category name="🏗️ World & Physics" colour="#7000ff">
             <block type="create_sprite"></block>
-          </category>
-          <category name="Movement" colour="#4C97FF">
             <block type="move_forward"></block>
             <block type="turn_right"></block>
-          </category>
-          <category name="Physics" colour="#7000ff">
             <block type="set_gravity"></block>
+            <block type="apply_force"></block>
           </category>
-          <category name="Events" colour="#FFBF00">
+          <category name="🔊 Audio & Sensors" colour="#FFBF00">
+            <block type="play_frequency"></block>
+          </category>
+          <category name="🎮 Game Essentials" colour="#00ccff">
+            <block type="add_score"></block>
+            <block type="timer_every"></block>
             <block type="when_clicked"></block>
             <block type="always_loop"></block>
           </category>
