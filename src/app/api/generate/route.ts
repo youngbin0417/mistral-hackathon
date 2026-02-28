@@ -3,7 +3,7 @@ import { Mistral } from '@mistralai/mistralai';
 
 export async function POST(req: Request) {
     try {
-        const { prompt } = await req.json();
+        const { prompt, context } = await req.json();
 
         console.log(`[AI Backend] Requesting Mistral API for prompt: "${prompt}"`);
 
@@ -18,6 +18,9 @@ export async function POST(req: Request) {
         const SYSTEM_PROMPT = `You are Codestral, an expert creative coder.
 The user placed a "Magic Block" with natural language in their block program.
 
+Context (Surrounding Code):
+${context?.fullCode || "// No existing code"}
+
 Magic Request: "${prompt}"
 
 Generate vanilla JavaScript code that:
@@ -27,8 +30,9 @@ Generate vanilla JavaScript code that:
    - APPROACH A (Visuals/Drawing): Use ONLY 'p5.js' for particles, visuals, sparkles. Use instance mode \`new p5(s => { ... s.setup = () => { s.createCanvas(window.innerWidth, window.innerHeight).parent('app'); } }, document.getElementById('app'))\`.
    - APPROACH B (Rigid Physics): Use ONLY 'Matter.js' for gravity blocks, bouncing. \`Render.create({ element: document.getElementById('app'), engine, options: { width: window.innerWidth, height: window.innerHeight } })\`.
    - APPROACH C (DOM/Vanilla): Use vanilla JS to animate HTML elements.
-4. CRITICAL: NEVER import or use both Matter.js and p5.js together. It causes rendering collisions.
-5. Provide brief, kid-friendly comments explaining the "magic" in Korean.
+4. CRITICAL: NEVER import or use both Matter.js and p5.js together.
+5. CONTINUITY: If the context code already defines a Character or Sprite (via window.entities), use those variables/entities instead of creating new ones if appropriate.
+6. Provide brief, kid-friendly comments explaining the "magic" in Korean.
 
 IMPORTANT RULES:
 - Return ONLY valid, executable JavaScript code.

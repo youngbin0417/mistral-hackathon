@@ -14,10 +14,10 @@ const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), 
 const prependImports = (sourceCode: string, libs: string[]) => {
   let imports = '';
   if (libs.includes('p5')) {
-    imports += `import p5 from 'p5';\n`;
+    imports += `import p5 from 'https://esm.sh/p5@1.9.0';\n`;
   }
   if (libs.includes('matter-js')) {
-    imports += `import Matter from 'matter-js';\n`;
+    imports += `import Matter from 'https://esm.sh/matter-js@0.19.0';\n`;
   }
   return imports + sourceCode;
 };
@@ -43,7 +43,12 @@ export default function Home() {
         const response = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt })
+          body: JSON.stringify({
+            prompt,
+            context: {
+              fullCode: newCode, // Give AI the surrounding code for context
+            }
+          })
         });
 
         const data = await response.json();
@@ -133,12 +138,21 @@ export default function Home() {
             </div>
           )}
           {isGenerating && (
-            <span className="text-sm font-semibold text-pink-400 animate-pulse flex items-center gap-2">
-              <span className="block w-2 h-2 bg-pink-500 rounded-full animate-ping"></span>
-              Codestral is brewing magic...
-            </span>
+            <div className="flex items-center gap-3 bg-pink-500/10 border border-pink-500/50 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.3)]">
+              <div className="relative flex items-center justify-center w-5 h-5">
+                <div className="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-75"></div>
+                <div className="relative bg-pink-600 w-3 h-3 rounded-full shadow-[0_0_10px_#ec4899]"></div>
+                <div className="absolute w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <span className="text-xs font-bold tracking-widest text-pink-400 uppercase">
+                AI Neural Processing...
+              </span>
+            </div>
           )}
-          <div className="text-sm text-gray-400 border border-gray-800 px-3 py-1 rounded-full">Phase 5 Self-Healing</div>
+          <div className="text-sm text-gray-400 border border-gray-800 px-3 py-1 rounded-full flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></div>
+            Phase 5 Self-Healing
+          </div>
         </div>
       </header>
 
@@ -154,10 +168,22 @@ export default function Home() {
 
       <div className="flex flex-1 gap-4 overflow-hidden">
         {/* Blockly Area */}
-        <div className="flex-[1.5] bg-gray-900 border border-gray-800 rounded-lg p-2 flex flex-col relative">
+        <div className="flex-[1.5] bg-gray-900 border border-gray-800 rounded-lg p-2 flex flex-col relative overflow-hidden group">
           <h2 className="text-lg font-semibold text-cyan-400 ml-2 mb-2">Blockly Workspace</h2>
-          <div className={`flex-1 bg-gray-950 rounded relative overflow-hidden transition-all duration-500 ${isGenerating ? 'ring-2 ring-pink-500 ring-opacity-50' : ''}`}>
+          <div className={`flex-1 bg-gray-950 rounded relative overflow-hidden transition-all duration-700 ${isGenerating ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-gray-900 ring-opacity-80 scale-[0.99]' : ''}`}>
             <BlocklyWorkspace onCodeChange={handleCodeChange} />
+
+            {/* AI Scanning Overlay */}
+            {isGenerating && (
+              <div className="absolute inset-0 z-50 pointer-events-none flex flex-col items-center justify-center overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-pink-500 to-transparent animate-scanline"></div>
+                <div className="absolute inset-0 bg-pink-900/10 backdrop-blur-[1px]"></div>
+                <div className="flex flex-col items-center gap-4 animate-pulse">
+                  <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-pink-400 font-mono text-sm tracking-tighter bg-black/40 px-3 py-1 rounded">DECRYPTING IMAGINATION...</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -178,8 +204,85 @@ export default function Home() {
               template="vanilla"
               theme="dark"
               files={{
-                "/index.js": code,
-                "/index.html": `<!DOCTYPE html><html><head><style>body, html { margin: 0; padding: 0; background: transparent; color: #fff; width: 100%; height: 100%; overflow: hidden; } #app { width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; } canvas { display: block; max-width: 100%; max-height: 100%; }</style></head><body><main id="app"></main><script src="index.js"></script></body></html>`
+                "/index.js": `console.log("index.js started");\n` + code,
+                "/index.html": `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body, html { margin: 0; padding: 0; background: #0a0a0f; color: #fff; width: 100%; height: 100%; overflow: hidden; }
+    #app { width: 100%; height: 100%; position: relative; }
+    canvas { pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    // --- SNAP & BUILD RUNTIME ---
+    window.entities = {};
+    window.createSprite = (name, x, y) => {
+        if (!window.entities[name]) {
+            console.log("Creating entity:", name);
+            window.entities[name] = { x, y, angle: 0, color: '#00f0ff' };
+        }
+    };
+    window.moveForward = (amount) => {
+        Object.values(window.entities).forEach(e => {
+            e.x += Math.cos(e.angle) * amount;
+            e.y += Math.sin(e.angle) * amount;
+        });
+    };
+    window.turnRight = (deg) => {
+        const rad = (deg * Math.PI) / 180;
+        Object.values(window.entities).forEach(e => e.angle += rad);
+    };
+
+    // Canvas Setup
+    const app = document.getElementById('app');
+    const canvas = document.createElement('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    app.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    function draw() {
+        const extraCanvas = document.querySelectorAll('canvas').length > 1;
+        if (extraCanvas) {
+            canvas.style.display = 'none';
+        } else {
+            canvas.style.display = 'block';
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            Object.entries(window.entities).forEach(([name, e]) => {
+                ctx.save();
+                ctx.translate(e.x, e.y);
+                ctx.rotate(e.angle);
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = e.color;
+                ctx.fillStyle = e.color;
+                // Triangle ship
+                ctx.beginPath();
+                ctx.moveTo(20, 0); ctx.lineTo(-10, 15); ctx.lineTo(-10, -15); ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px monospace';
+                ctx.fillText(name, -10, 25);
+                ctx.restore();
+            });
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+    console.log("Runtime initialized");
+  </script>
+  <script src="index.js"></script>
+</body>
+</html>`
               }}
               customSetup={{
                 dependencies: {
@@ -224,11 +327,96 @@ export default function Home() {
                         <p className="text-pink-300 text-lg italic animate-pulse">"{healingMessage}"</p>
                       </div>
                     )}
-                    <SandpackPreview
-                      showNavigator={false}
-                      showOpenInCodeSandbox={false}
-                      showRefreshButton={true}
-                      style={{ width: "100%", height: "100%", minHeight: "100%", border: 'none' }}
+
+                    {/* Robust Local Iframe Preview */}
+                    <iframe
+                      className="w-full h-full border-none bg-[#0a0a0f]"
+                      title="Magic Preview"
+                      sandbox="allow-scripts allow-modals"
+                      srcDoc={`
+                          <!DOCTYPE html>
+                          <html>
+                          <head>
+                            <meta charset="UTF-8">
+                            <style>
+                              body, html { margin: 0; padding: 0; background: #0a0a0f; color: #fff; width: 100%; height: 100%; overflow: hidden; }
+                              #app { width: 100%; height: 100%; position: relative; }
+                              canvas { display: block; }
+                            </style>
+                          </head>
+                          <body>
+                            <div id="app"></div>
+                            <script>
+                              // --- SNAP & BUILD RUNTIME ---
+                              window.entities = {};
+                              window.createSprite = (name, x, y) => {
+                                  if (!window.entities[name]) {
+                                      window.entities[name] = { x, y, angle: 0, color: '#00f0ff' };
+                                  }
+                              };
+                              window.moveForward = (amount) => {
+                                  Object.values(window.entities).forEach(e => {
+                                      e.x += Math.cos(e.angle) * (amount || 1);
+                                      e.y += Math.sin(e.angle) * (amount || 1);
+                                  });
+                              };
+                              window.turnRight = (deg) => {
+                                  const rad = (deg * Math.PI) / 180;
+                                  Object.values(window.entities).forEach(e => e.angle += rad);
+                              };
+
+                              // Canvas Setup
+                              const app = document.getElementById('app');
+                              const canvas = document.createElement('canvas');
+                              canvas.width = window.innerWidth;
+                              canvas.height = window.innerHeight;
+                              app.appendChild(canvas);
+                              const ctx = canvas.getContext('2d');
+
+                              function draw() {
+                                  const extraCanvas = document.querySelectorAll('canvas').length > 1;
+                                  if (extraCanvas) {
+                                      canvas.style.display = 'none';
+                                  } else {
+                                      canvas.style.display = 'block';
+                                      ctx.fillStyle = '#111';
+                                      ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                      
+                                      Object.entries(window.entities).forEach(([name, e]) => {
+                                          ctx.save();
+                                          ctx.translate(e.x, e.y);
+                                          ctx.rotate(e.angle);
+                                          ctx.shadowBlur = 15;
+                                          ctx.shadowColor = e.color;
+                                          ctx.fillStyle = e.color;
+                                          ctx.beginPath();
+                                          ctx.moveTo(25, 0); ctx.lineTo(-15, 20); ctx.lineTo(-15, -20); ctx.closePath();
+                                          ctx.fill();
+                                          ctx.fillStyle = '#fff';
+                                          ctx.font = 'bold 12px monospace';
+                                          ctx.fillText(name, -15, 40);
+                                          ctx.restore();
+                                      });
+                                  }
+                                  requestAnimationFrame(draw);
+                              }
+                              draw();
+                              window.addEventListener('resize', () => {
+                                  canvas.width = window.innerWidth;
+                                  canvas.height = window.innerHeight;
+                              });
+                            </script>
+                            <script type="module">
+                              try {
+                                ${code}
+                              } catch (e) {
+                                console.error("Runtime Error:", e.message);
+                                window.parent.postMessage({ type: 'error', message: e.message }, '*');
+                              }
+                            </script>
+                          </body>
+                          </html>
+                        `}
                     />
                   </div>
                 </div>

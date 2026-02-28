@@ -1,5 +1,63 @@
 @import "tailwindcss";
 
+/* --- Cyberpunk Blockly Styles --- */
+.blocklySvg {
+    background-color: transparent !important;
+}
+
+.blocklyPath {
+    stroke-width: 1.5px !important;
+    filter: drop-shadow(0 0 2px rgba(0, 240, 255, 0.4));
+}
+
+.blocklyMainBackground {
+    fill: #0a0a0f !important;
+}
+
+/* Specific Magic Block Glow */
+[fill="#ff00ff"].blocklyPath {
+    filter: drop-shadow(0 0 8px #ff00ff) drop-shadow(0 0 15px #ff00ff);
+}
+
+.blocklyTreeLabel {
+    color: #00f0ff !important;
+    font-family: inherit;
+    font-weight: bold;
+    text-shadow: 0 0 5px #00f0ff70;
+}
+
+.blocklyToolboxDiv {
+    background-color: #0d0d14 !important;
+    border-right: 1px solid #1a1a2e !important;
+    padding: 8px !important;
+}
+
+/* AI Neural Scanline Animation */
+@keyframes scanline {
+    0% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(80vh);
+        opacity: 0;
+    }
+}
+
+.animate-scanline {
+    animation: scanline 2.5s linear infinite;
+}
+
+
 /* Hide the Blockly keyboard navigation cursor/marker that gets left behind */
 .blocklyCursor,
 .blocklyMarker {

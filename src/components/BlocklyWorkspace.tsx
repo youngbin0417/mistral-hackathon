@@ -9,7 +9,41 @@ import DarkTheme from '@blockly/theme-dark';
 
 Blockly.setLocale(En as any);
 
-// Define the Magic Block structure
+// --- Custom Theme ---
+const CyberpunkTheme = Blockly.Theme.defineTheme('cyberpunk', {
+    name: 'cyberpunk',
+    base: DarkTheme,
+    blockStyles: {
+        'logic_blocks': { colourPrimary: '#00f0ff' },
+        'loop_blocks': { colourPrimary: '#ff00ff' },
+        'math_blocks': { colourPrimary: '#7000ff' },
+        'text_blocks': { colourPrimary: '#00ccff' },
+        'list_blocks': { colourPrimary: '#ffcc00' },
+        'colour_blocks': { colourPrimary: '#ff0066' },
+        'variable_blocks': { colourPrimary: '#66ff00' },
+        'procedure_blocks': { colourPrimary: '#ff6600' },
+    },
+    categoryStyles: {
+        'logic_category': { colour: '#00f0ff' },
+        'loop_category': { colour: '#ff00ff' },
+        'math_category': { colour: '#7000ff' },
+        'text_category': { colour: '#00ccff' },
+    },
+    componentStyles: {
+        workspaceBackgroundColour: '#0a0a0f',
+        toolboxBackgroundColour: '#0d0d14',
+        toolboxForegroundColour: '#00f0ff',
+        flyoutBackgroundColour: '#0d0d14',
+        flyoutForegroundColour: '#00f0ff',
+        insertionMarkerColour: '#fff',
+        insertionMarkerOpacity: 0.3,
+        scrollbarColour: '#1a1a2e',
+        scrollbarOpacity: 0.4,
+        cursorColour: '#ff00ff',
+    },
+});
+
+// --- Custom Blocks ---
 Blockly.Blocks['magic_block'] = {
     init: function () {
         this.jsonInit({
@@ -57,6 +91,36 @@ Blockly.Blocks['turn_right'] = {
     }
 };
 
+// Physics: Set Gravity
+Blockly.Blocks['set_gravity'] = {
+    init: function () {
+        this.jsonInit({
+            "message0": "Set Gravity to %1",
+            "args0": [{ "type": "field_number", "name": "VALUE", "value": 1 }],
+            "previousStatement": null,
+            "nextStatement": null,
+            "colour": "#7000ff"
+        });
+    }
+};
+
+// Character: Create Sprite
+Blockly.Blocks['create_sprite'] = {
+    init: function () {
+        this.jsonInit({
+            "message0": "Create %1 Sprite at X: %2 Y: %3",
+            "args0": [
+                { "type": "field_input", "name": "NAME", "text": "Hero" },
+                { "type": "field_number", "name": "X", "value": 200 },
+                { "type": "field_number", "name": "Y", "value": 200 }
+            ],
+            "previousStatement": null,
+            "nextStatement": null,
+            "colour": "#00f0ff"
+        });
+    }
+};
+
 // Event: When Clicked
 Blockly.Blocks['when_clicked'] = {
     init: function () {
@@ -88,6 +152,18 @@ javascriptGenerator.forBlock['turn_right'] = function (block: any) {
     return `if(typeof turnRight === "function") turnRight(${degrees});\n`;
 };
 
+javascriptGenerator.forBlock['set_gravity'] = function (block: any) {
+    const value = block.getFieldValue('VALUE');
+    return `if(typeof setGravity === "function") setGravity(${value});\n`;
+};
+
+javascriptGenerator.forBlock['create_sprite'] = function (block: any) {
+    const name = block.getFieldValue('NAME');
+    const x = block.getFieldValue('X');
+    const y = block.getFieldValue('Y');
+    return `if(typeof createSprite === "function") createSprite("${name}", ${x}, ${y});\n`;
+};
+
 javascriptGenerator.forBlock['when_clicked'] = function (block: any) {
     const branch = javascriptGenerator.statementToCode(block, 'STACK');
     return `document.getElementById('app').onclick = function() {\n${branch}};\n`;
@@ -116,12 +192,18 @@ export default function BlocklyWorkspace({ onCodeChange }: { onCodeChange: (code
         workspaceRef.current = Blockly.inject(blocklyDiv.current, {
             toolbox: `
         <xml xmlns="https://developers.google.com/blockly/xml">
-          <category name="✨ AI Magic" colour="290">
+          <category name="✨ AI Magic" colour="#ff00ff">
             <block type="magic_block"></block>
+          </category>
+          <category name="Character" colour="#00f0ff">
+            <block type="create_sprite"></block>
           </category>
           <category name="Movement" colour="#4C97FF">
             <block type="move_forward"></block>
             <block type="turn_right"></block>
+          </category>
+          <category name="Physics" colour="#7000ff">
+            <block type="set_gravity"></block>
           </category>
           <category name="Events" colour="#FFBF00">
             <block type="when_clicked"></block>
@@ -137,7 +219,7 @@ export default function BlocklyWorkspace({ onCodeChange }: { onCodeChange: (code
           </category>
         </xml>
       `,
-            theme: DarkTheme,
+            theme: CyberpunkTheme,
         });
 
         const handleResize = () => {
