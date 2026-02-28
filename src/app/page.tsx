@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { SandpackProvider, SandpackLayout, SandpackCodeEditor, useSandpack } from "@codesandbox/sandpack-react";
+import React, { useState, useEffect } from 'react';
+import { SandpackProvider, SandpackLayout, SandpackCodeEditor } from "@codesandbox/sandpack-react";
 import { Play, Code, X, Sparkles, AlertCircle, MoveHorizontal } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import {
-  applyCachedReplacements,
-  prependImports,
-  stripMarkdownFences,
-  type AiCacheEntry,
-} from '@/lib/codeTransform';
+import toast, { Toaster } from 'react-hot-toast';
+
+import ApiSetupModal from '@/components/ApiSetupModal';
+import TopNavigation from '@/components/TopNavigation';
+import RecentMagics from '@/components/RecentMagics';
+import SelfHealer from '@/components/SelfHealer';
+import { useAiGeneration } from '@/hooks/useAiGeneration';
+import { useSelfHealer } from '@/hooks/useSelfHealer';
 
 // Helper for Tailwind classes
 function cn(...inputs: ClassValue[]) {
@@ -25,232 +27,63 @@ const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), 
 });
 
 // prependImports is now imported from @/lib/codeTransform
-
-import toast, { Toaster } from 'react-hot-toast';
-
 export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
+  const [needsApiKey, setNeedsApiKey] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState("");
 
   useEffect(() => {
+    // Check if API key is set
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.hasApiKey === false) {
+          setNeedsApiKey(true);
+        }
+      })
+      .catch(err => console.error("Failed to check API Key", err));
+
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const [code, setCode] = useState(`// Start dragging blocks!`);
-  const codeRef = useRef(code);
-  useEffect(() => { codeRef.current = code; }, [code]);
+  const handleSaveApiKey = async () => {
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: apiKeyInput })
+      });
+      if (res.ok) {
+        setNeedsApiKey(false);
+        toast.success("API Key saved! Ready to use.");
+      } else {
+        toast.error("Failed to save API key.");
+      }
+    } catch (e) {
+      toast.error("Error saving API key.");
+    }
+  };
 
-  const [injectedLibs, setInjectedLibs] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const { code, setCode, codeRef, injectedLibs, isGenerating, handleCodeChange } = useAiGeneration(`// Start dragging blocks!`);
+  const { isHealing, healingMessage, lastError, handleHeal } = useSelfHealer(codeRef, setCode);
+
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [isHealing, setIsHealing] = useState(false);
-  const [healingMessage, setHealingMessage] = useState<string | null>(null);
-  const [lastError, setLastError] = useState<string | null>(null);
-  const [aiCache, setAiCache] = useState<Record<string, AiCacheEntry>>({});
-  const aiCacheRef = useRef<Record<string, AiCacheEntry>>({});
-  const healingAttemptsRef = useRef<Record<string, number>>({});
-
-  const handleCodeChange = (rawCode: string) => {
-    // 1. 블록 삭제 시 캐시에서도 정리 (안쓰는 import 제거 효과)
-    let cacheChanged = false;
-    const newCache = { ...aiCacheRef.current };
-    Object.keys(newCache).forEach(prompt => {
-      if (!rawCode.includes(`// AI: ${prompt}`)) {
-        delete newCache[prompt];
-        cacheChanged = true;
-      }
-    });
-
-    if (cacheChanged) {
-      aiCacheRef.current = newCache;
-      setAiCache(newCache);
-    }
-
-    const { processedCode, uncachedPrompts } = applyCachedReplacements(rawCode, aiCacheRef.current);
-    const allLibs = Array.from(new Set(Object.values(aiCacheRef.current).flatMap(e => e.libs)));
-    const finalCode = allLibs.length > 0 ? prependImports(processedCode, allLibs) : processedCode;
-
-    setCode(finalCode);
-    if (uncachedPrompts.length > 0 && !isGenerating) {
-      triggerAiGeneration(uncachedPrompts[0], rawCode);
-    }
-  };
-
-  const triggerAiGeneration = async (prompt: string, fullRawCode: string) => {
-    setIsGenerating(true);
-    try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, context: { fullCode: fullRawCode } })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || "AI Generation failed");
-      }
-      const data = await response.json();
-      if (data.code) {
-        const cleanCode = stripMarkdownFences(data.code);
-        const newLibs: string[] = data.injectedLibraries || [];
-        const newEntry: AiCacheEntry = { code: cleanCode, libs: newLibs };
-
-        aiCacheRef.current = { ...aiCacheRef.current, [prompt]: newEntry };
-        setAiCache(aiCacheRef.current);
-        if (newLibs.length > 0) setInjectedLibs(prev => Array.from(new Set([...prev, ...newLibs])));
-
-        const { processedCode } = applyCachedReplacements(fullRawCode, aiCacheRef.current);
-        const allLibs = Array.from(new Set(Object.values(aiCacheRef.current).flatMap(e => e.libs)));
-        setCode(allLibs.length > 0 ? prependImports(processedCode, allLibs) : processedCode);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "AI Magic failed! Please try again.");
-      console.error("AI Generation failed:", err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // --- Self Healing Component ---
-  const SelfHealer = () => {
-    const { sandpack } = useSandpack();
-    const runtimeError = sandpack.error;
-
-    useEffect(() => {
-      if (runtimeError && runtimeError.message !== lastError && !isHealing) {
-        handleHeal(runtimeError.message);
-      }
-    }, [runtimeError, isHealing]);
-
-    return null;
-  };
-
-  const handleHeal = async (errorMessage: string) => {
-    const attempts = healingAttemptsRef.current[errorMessage] || 0;
-    if (attempts >= 3) {
-      toast.error("I tried my best, but couldn't fix this error. Please adjust the blocks manually.");
-      setLastError(errorMessage); // Stop trying
-      return;
-    }
-
-    healingAttemptsRef.current[errorMessage] = attempts + 1;
-    setLastError(errorMessage);
-    setIsHealing(true);
-    setHealingMessage("AI is analyzing the bug... 🧐");
-
-    try {
-      const response = await fetch('/api/heal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: errorMessage, code: codeRef.current })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || "Self-healing failed");
-      }
-      const data = await response.json();
-      if (data.fixedCode) {
-        setHealingMessage(data.explanation || "Bug fixed! ✨");
-        setTimeout(() => {
-          setCode(data.fixedCode);
-          setIsHealing(false);
-          setHealingMessage(null);
-          toast.success("Self-Healed successfully!");
-        }, 3000);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Self-healing failed. Maybe check your prompts?");
-      setIsHealing(false);
-      setHealingMessage(null);
-    }
-  };
-
-  // --- Recent Magic Component ---
-  const RecentMagics = () => {
-    const [recent, setRecent] = useState<any[]>([]);
-
-    useEffect(() => {
-      const fetchRecent = async () => {
-        try {
-          const res = await fetch('/api/recent');
-          const data = await res.json();
-          if (data.recent) setRecent(data.recent);
-        } catch (e) {
-          console.error("Failed to fetch recent magics", e);
-        }
-      };
-
-      fetchRecent();
-      const interval = setInterval(fetchRecent, 20000); // 20s interval
-      return () => clearInterval(interval);
-    }, []);
-
-    if (recent.length === 0) return null;
-
-    return (
-      <div className="mt-4 bg-gray-900/80 border border-gray-800 rounded-lg p-3 backdrop-blur-md">
-        <h3 className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-          <Sparkles size={14} className="animate-pulse" />
-          Recent Community Magics
-        </h3>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {recent.map((m: any, i: number) => (
-            <div
-              key={i}
-              className="flex-shrink-0 bg-black/40 border border-gray-800 hover:border-pink-500/50 p-2 rounded-md transition-all cursor-help group"
-              title={m.prompt}
-            >
-              <p className="text-[10px] text-cyan-400 font-mono mb-1 tracking-tighter opacity-70">
-                {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
-              <p className="text-xs text-white group-hover:text-pink-400 transition-colors">
-                ✨ {m.prompt.length > 25 ? m.prompt.substring(0, 25) + '...' : m.prompt}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="flex flex-col h-[100dvh] p-2 md:p-4 bg-gray-950 text-white font-sans overflow-hidden">
       <Toaster position="bottom-right" reverseOrder={false} />
-      <header className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-pink-500 to-cyan-400 bg-clip-text text-transparent">
-          Mistral Snap & Build
-        </h1>
-        <div className="flex flex-wrap items-center gap-2 md:gap-3">
-          {injectedLibs.length > 0 && (
-            <div className="flex gap-1 mr-2">
-              {injectedLibs.map(lib => (
-                <span key={lib} className="text-xs bg-cyan-900 border border-cyan-500 text-cyan-300 px-2 py-0.5 rounded animate-pulse">
-                  {lib} loaded
-                </span>
-              ))}
-            </div>
-          )}
-          {isGenerating && (
-            <div className="flex items-center gap-3 bg-pink-500/10 border border-pink-500/50 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.3)]">
-              <div className="relative flex items-center justify-center w-5 h-5">
-                <div className="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-75"></div>
-                <div className="relative bg-pink-600 w-3 h-3 rounded-full shadow-[0_0_10px_#ec4899]"></div>
-                <div className="absolute w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-              <span className="text-xs font-bold tracking-widest text-pink-400 uppercase">
-                AI Neural Processing...
-              </span>
-            </div>
-          )}
-          <div className="text-sm text-gray-400 border border-gray-800 px-3 py-1 rounded-full flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></div>
-            Phase 5 Self-Healing
-          </div>
-        </div>
-      </header>
+
+      <ApiSetupModal
+        needsApiKey={needsApiKey}
+        apiKeyInput={apiKeyInput}
+        setApiKeyInput={setApiKeyInput}
+        handleSaveApiKey={handleSaveApiKey}
+      />
+
+      <TopNavigation injectedLibs={injectedLibs} isGenerating={isGenerating} />
 
       {/* Healing Notification Overlay */}
       {healingMessage && (
@@ -422,7 +255,7 @@ export default function Home() {
                     />
                   </SandpackLayout>
 
-                  <SelfHealer />
+                  <SelfHealer isHealing={isHealing} lastError={lastError} handleHeal={handleHeal} />
 
                 </SandpackProvider>
               </div>

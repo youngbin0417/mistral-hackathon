@@ -34,8 +34,8 @@ export async function POST(req: Request) {
 
         const client = new Mistral({ apiKey });
 
-        const SYSTEM_PROMPT = `You are an expert debugger and coding mentor for children.
-The user is learning coding with blocks, but their program has a runtime error.
+        const SYSTEM_PROMPT = `You are an expert debugger and coding mentor.
+The user's block program has a runtime error.
 
 ERROR MESSAGE: "${error}"
 CURRENT CODE:
@@ -44,10 +44,11 @@ ${code}
 YOUR TASK:
 1. Analyze why the error occurred (e.g., missing variable, wrong library usage, logical order).
 2. Fix the code so it runs perfectly.
-3. Provide a very simple, kid-friendly explanation of the fix in Korean.
+3. Provide a very simple explanation of the fix in English.
 
 IMPORTANT RULES:
-- Return a JSON object with two fields: "fixedCode" (string) and "explanation" (string in Korean).
+- Return a JSON object with two fields: "fixedCode" (string) and "explanation" (string in English).
+- ALL explanations and comments MUST be in English. NEVER use Korean.
 - Return ONLY the raw JSON. No markdown blocks.
 - Preserve the user's creative intent.
 - Ensure only one library (p5.js OR Matter.js) is used correctly.

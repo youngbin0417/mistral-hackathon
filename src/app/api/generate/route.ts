@@ -58,6 +58,7 @@ Generate the most high-quality, impressive, and complete JavaScript code possibl
 Return ONLY raw JavaScript code. 
 DO NOT use markdown code blocks. 
 DO NOT include explanations unless they are in code comments.
+ALL code comments and names MUST be strictly in English. NEVER use Korean.
 Ensure the code is self-contained and runs immediately.`;
 
         const chatResponse = await client.chat.complete({
