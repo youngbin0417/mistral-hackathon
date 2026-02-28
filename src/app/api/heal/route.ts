@@ -3,6 +3,7 @@ import { Mistral } from '@mistralai/mistralai';
 import { logger } from '@/lib/logger';
 import { redis } from '@/lib/redis';
 import { rateLimit } from '@/lib/rateLimit';
+import { ApiErrorResponse, HealRequest, HealResponse } from '@/types/api';
 
 export async function POST(req: Request) {
     try {
@@ -22,17 +23,11 @@ export async function POST(req: Request) {
             );
         }
 
-        const { error, code, prompt } = await req.json();
+        const { error, code, prompt } = (await req.json()) as HealRequest;
 
         logger.info({ error }, `[AI Heal] Requesting Mistral API to fix error: "${error}"`);
 
-        const apiKey = process.env.MISTRAL_API_KEY;
-        if (!apiKey) {
-            logger.error("MISTRAL_API_KEY is missing from environment variables.");
-            return NextResponse.json({ error: "API key is not configured" }, { status: 500 });
-        }
-
-        const client = new Mistral({ apiKey });
+        const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
         const SYSTEM_PROMPT = `You are an expert debugger and coding mentor.
 The user's block program has a runtime error.
@@ -75,8 +70,10 @@ IMPORTANT RULES:
         logger.info("[AI Heal] Healing successful.");
 
         return NextResponse.json(result);
-    } catch (error: any) {
-        logger.error({ err: error.message || error }, "[AI Heal] Mistral API Error");
-        return NextResponse.json({ error: "Failed to heal code via Mistral" }, { status: 500 });
+    } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
+        logger.error({ err: errorMsg }, "[AI Heal] Mistral API Error");
+        const errResp: ApiErrorResponse = { error: "Failed to heal code via Mistral" };
+        return NextResponse.json(errResp, { status: 500 });
     }
 }

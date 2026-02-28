@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { redis } from '@/lib/redis';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rateLimit';
+import { ApiErrorResponse, RecentResponse } from '@/types/api';
 
 export async function GET(req: Request) {
     try {
@@ -25,9 +26,12 @@ export async function GET(req: Request) {
             }
         }).filter(item => item !== null);
 
-        return NextResponse.json({ recent: recentMagics });
-    } catch (error: any) {
-        logger.error({ err: error.message || error }, "[Recent API] Failed to fetch recent magics");
-        return NextResponse.json({ error: "Failed to fetch recent magics" }, { status: 500 });
+        const resp: RecentResponse = { recent: recentMagics };
+        return NextResponse.json(resp);
+    } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
+        logger.error({ err: errorMsg }, "[Recent API] Failed to fetch recent magics");
+        const errResp: ApiErrorResponse = { error: "Failed to fetch recent magics" };
+        return NextResponse.json(errResp, { status: 500 });
     }
 }

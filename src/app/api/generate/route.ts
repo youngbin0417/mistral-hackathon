@@ -3,6 +3,7 @@ import { Mistral } from '@mistralai/mistralai';
 import { logger } from '@/lib/logger';
 import { redis } from '@/lib/redis';
 import { rateLimit } from '@/lib/rateLimit';
+import { ApiErrorResponse, GenerateRequest, GenerateResponse } from '@/types/api';
 
 export async function POST(req: Request) {
     try {
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const { prompt, context } = await req.json();
+        const { prompt, context } = (await req.json()) as GenerateRequest;
 
         logger.info({ prompt }, `[AI Backend] Requesting Mistral API for prompt: "${prompt}"`);
 
@@ -44,13 +45,7 @@ export async function POST(req: Request) {
             logger.warn({ err: redisErr }, `[AI Backend] Redis cache lookup failed, treating as cache miss`);
         }
 
-        const apiKey = process.env.MISTRAL_API_KEY;
-        if (!apiKey) {
-            logger.error("MISTRAL_API_KEY is missing from environment variables.");
-            return NextResponse.json({ error: "API key is not configured" }, { status: 500 });
-        }
-
-        const client = new Mistral({ apiKey });
+        const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
         const SYSTEM_PROMPT = `You are a professional creative coder. 
 The user will provide a prompt for a visual or interactive effect. 
@@ -130,7 +125,7 @@ You MUST return ONLY a valid JSON object with exactly this structure:
         logger.info({ injectedLibraries }, `[AI Backend] Codestral response success. Libs detected: ${injectedLibraries.join(', ')}`);
         logger.debug({ code: generatedCode }, `[AI Backend] Generated Code for prompt "${prompt}":\n${generatedCode}`);
 
-        const responseData = { code: generatedCode, injectedLibraries };
+        const responseData: GenerateResponse = { code: generatedCode, injectedLibraries };
 
         // Save to cache and recent list
         try {
@@ -142,8 +137,10 @@ You MUST return ONLY a valid JSON object with exactly this structure:
         }
 
         return NextResponse.json(responseData);
-    } catch (error: any) {
-        logger.error({ err: error.message || error }, "[AI Backend] Mistral API Error");
-        return NextResponse.json({ error: "Failed to generate code via Mistral" }, { status: 500 });
+    } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : "Unknown error";
+        logger.error({ err: errorMsg }, "[AI Backend] Mistral API Error");
+        const errResp: ApiErrorResponse = { error: "Failed to generate code via Mistral" };
+        return NextResponse.json(errResp, { status: 500 });
     }
 }

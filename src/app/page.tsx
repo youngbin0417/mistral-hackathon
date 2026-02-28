@@ -13,6 +13,7 @@ import AIStatusBar from '@/components/AIStatusBar';
 import SelfHealer from '@/components/SelfHealer';
 import { useAiGeneration } from '@/hooks/useAiGeneration';
 import { useSelfHealer } from '@/hooks/useSelfHealer';
+import { SANDPACK_LIBRARIES } from '@/config/constants';
 
 const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), {
   ssr: false,
@@ -212,10 +213,7 @@ export default function Home() {
 </html>`
                   }}
                   customSetup={{
-                    dependencies: {
-                      "p5": "^1.9.0",
-                      "matter-js": "^0.19.0"
-                    }
+                    dependencies: SANDPACK_LIBRARIES
                   }}
                 >
                   <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', flex: 1, display: 'flex' }}>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { ApiErrorResponse, HealResponse } from '@/types/api';
 
 export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: (code: string) => void) {
     const [isHealing, setIsHealing] = useState(false);
@@ -35,10 +36,10 @@ export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: 
             });
 
             if (!response.ok) {
-                const errData = await response.json();
+                const errData = (await response.json()) as ApiErrorResponse;
                 throw new Error(errData.error || "Self-healing failed");
             }
-            const data = await response.json();
+            const data = (await response.json()) as HealResponse;
             if (data.fixedCode) {
                 setHealingMessage(data.explanation || "Bug fixed! ✨");
                 setTimeout(() => {
@@ -48,8 +49,9 @@ export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: 
                     toast.success("Self-Healed successfully!");
                 }, 3000);
             }
-        } catch (err: any) {
-            toast.error(err.message || "Self-healing failed. Maybe check your prompts?");
+        } catch (err: unknown) {
+            const errorMsg = err instanceof Error ? err.message : "Self-healing failed. Maybe check your prompts?";
+            toast.error(errorMsg);
             setIsHealing(false);
             setHealingMessage(null);
         }

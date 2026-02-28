@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { ApiErrorResponse, ConfigGetResponse, ConfigPostRequest, ConfigPostResponse } from '@/types/api';
 
 export async function GET() {
-    return NextResponse.json({ hasApiKey: !!process.env.MISTRAL_API_KEY });
+    const resp: ConfigGetResponse = { hasApiKey: !!process.env.MISTRAL_API_KEY };
+    return NextResponse.json(resp);
 }
 
 export async function POST(req: Request) {
     try {
-        const { apiKey } = await req.json();
+        const { apiKey } = (await req.json()) as ConfigPostRequest;
         if (!apiKey) {
-            return NextResponse.json({ error: "No API key provided" }, { status: 400 });
+            const errResp: ApiErrorResponse = { error: "No API key provided" };
+            return NextResponse.json(errResp, { status: 400 });
         }
 
         // Update process.env so it works immediately without restart
@@ -31,8 +34,10 @@ export async function POST(req: Request) {
 
         fs.writeFileSync(envPath, envContent.trim() + '\n');
 
-        return NextResponse.json({ success: true });
-    } catch (e) {
-        return NextResponse.json({ error: "Failed to save API key" }, { status: 500 });
+        const resp: ConfigPostResponse = { success: true };
+        return NextResponse.json(resp);
+    } catch (e: unknown) {
+        const errResp: ApiErrorResponse = { error: "Failed to save API key" };
+        return NextResponse.json(errResp, { status: 500 });
     }
 }
