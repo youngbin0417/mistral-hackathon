@@ -11,6 +11,7 @@
   "dependencies": {
     "@blockly/theme-dark": "^8.0.3",
     "@codesandbox/sandpack-react": "^2.20.0",
+    "@mistralai/mistralai": "^1.14.1",
     "blockly": "^12.4.1",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",

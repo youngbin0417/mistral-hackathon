@@ -10,8 +10,21 @@ const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), 
   loading: () => <div className="absolute inset-0 flex items-center justify-center text-gray-500">Loading Blockly...</div>
 });
 
+// Prepend import statements dynamically based on AI detection
+const prependImports = (sourceCode: string, libs: string[]) => {
+  let imports = '';
+  if (libs.includes('p5')) {
+    imports += `import p5 from 'p5';\n`;
+  }
+  if (libs.includes('matter-js')) {
+    imports += `import Matter from 'matter-js';\n`;
+  }
+  return imports + sourceCode;
+};
+
 export default function Home() {
   const [code, setCode] = useState(`// Start dragging blocks!`);
+  const [injectedLibs, setInjectedLibs] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
 
@@ -32,11 +45,19 @@ export default function Home() {
 
         const data = await response.json();
         if (data.code) {
+          if (data.injectedLibraries) {
+            setInjectedLibs(data.injectedLibraries);
+          }
           // Replace the template marker with the actual generated AI code
-          const mergedCode = newCode.replace(
+          let mergedCode = newCode.replace(
             /\/\* ✨ AI Request: "[^"]+" \*\/\nconsole\.log\('✨ Magic Triggered for: "[^"]+"'\);\n/,
             '\n' + data.code + '\n'
           );
+
+          if (data.injectedLibraries && data.injectedLibraries.length > 0) {
+            mergedCode = prependImports(mergedCode, data.injectedLibraries);
+          }
+
           setCode(mergedCode);
         }
       } catch (err) {
@@ -56,13 +77,22 @@ export default function Home() {
           Mistral Snap & Build
         </h1>
         <div className="flex items-center gap-3">
+          {injectedLibs.length > 0 && (
+            <div className="flex gap-1 mr-2">
+              {injectedLibs.map(lib => (
+                <span key={lib} className="text-xs bg-cyan-900 border border-cyan-500 text-cyan-300 px-2 py-0.5 rounded animate-pulse">
+                  {lib} loaded
+                </span>
+              ))}
+            </div>
+          )}
           {isGenerating && (
             <span className="text-sm font-semibold text-pink-400 animate-pulse flex items-center gap-2">
               <span className="block w-2 h-2 bg-pink-500 rounded-full animate-ping"></span>
               Codestral is brewing magic...
             </span>
           )}
-          <div className="text-sm text-gray-400 border border-gray-800 px-3 py-1 rounded-full">Phase 2 AI Linked</div>
+          <div className="text-sm text-gray-400 border border-gray-800 px-3 py-1 rounded-full">Phase 3 AI Libraries</div>
         </div>
       </header>
 
@@ -93,6 +123,13 @@ export default function Home() {
               theme="dark"
               files={{
                 "/index.js": code,
+                "/index.html": `<!DOCTYPE html><html><head><style>body { margin: 0; padding: 0; background: #000; color: #fff; }</style></head><body><main id="app"></main><script src="index.js"></script></body></html>`
+              }}
+              customSetup={{
+                dependencies: {
+                  "p5": "^1.9.0",
+                  "matter-js": "^0.19.0"
+                }
               }}
             >
               <SandpackLayout style={{ height: "100%", borderRadius: 0, border: 'none' }}>
