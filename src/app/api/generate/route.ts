@@ -58,9 +58,10 @@ Generate the most high-quality, impressive, and complete JavaScript code possibl
 Return ONLY raw JavaScript code. 
 DO NOT use markdown code blocks. 
 DO NOT include explanations unless they are in code comments.
-ALL code comments and names MUST be strictly in English. NEVER use Korean.
+ALL code comments and names MUST be strictly in English.
 Ensure the code is self-contained and runs immediately.`;
 
+        // Step 1: Draft Code Generation (Creative Phase)
         const chatResponse = await client.chat.complete({
             model: 'codestral-latest',
             messages: [
@@ -69,22 +70,62 @@ Ensure the code is self-contained and runs immediately.`;
             ]
         });
 
-        let rawContent = chatResponse.choices?.[0]?.message?.content || "";
-        let generatedCode = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
+        let draftCode = chatResponse.choices?.[0]?.message?.content || "";
+        if (typeof draftCode !== 'string') draftCode = JSON.stringify(draftCode);
 
-        // Fallback cleanup if the model still accidentally returns markdown blocks
+        // Step 2: Refinement & Library Detection Phase (Review Phase)
+        const REFINE_PROMPT = `You are a strict code reviewer and library detector.
+Review the following drafted JavaScript code.
+1. Fix any syntax errors, incomplete logic, or infinite loops.
+2. Remove completely any markdown code blocks (e.g., \`\`\`javascript).
+3. Detect which frontend libraries are required. We currently support: "p5", "p5.sound", "matter-js".
+4. Ensure all comments and variable names are strictly in English.
+
+You MUST return ONLY a valid JSON object with exactly this structure:
+{
+  "code": "cleaned and fixed javascript code string that runs standalone",
+  "libraries": ["array", "of", "required", "library", "strings"]
+}`;
+
+        logger.info(`[AI Backend] Starting Step 2: Refining drafted code...`);
+        const refineResponse = await client.chat.complete({
+            model: 'mistral-large-latest',
+            responseFormat: { type: "json_object" },
+            messages: [
+                { role: 'system', content: REFINE_PROMPT },
+                { role: 'user', content: `Here is the draft code to review and refine:\n\n${draftCode}` }
+            ]
+        });
+
+        let finalResponseData: { code: string, libraries: string[] } = { code: "", libraries: [] };
+        try {
+            const rawRefine = refineResponse.choices?.[0]?.message?.content || "{}";
+            finalResponseData = JSON.parse(typeof rawRefine === 'string' ? rawRefine : JSON.stringify(rawRefine));
+        } catch (parseError) {
+            logger.error({ err: parseError }, `[AI Backend] Step 2 JSON parsing failed. Falling back to draft.`);
+            finalResponseData.code = draftCode;
+        }
+
+        let generatedCode = finalResponseData.code || draftCode;
+
+        // Ultimate Fallback cleanup 
         if (generatedCode.startsWith('```')) {
             generatedCode = generatedCode.replace(/^```[a-z]*\n/, '').replace(/\n```$/, '');
         }
 
-        // Auto-detect required libraries based on keywords in the generated code
-        const injectedLibraries: string[] = [];
+        // Combine AI detected libs with rule-based detection for maximum safety
+        const detectedLibraries = new Set<string>(finalResponseData.libraries || []);
         if (generatedCode.includes('Matter.') || generatedCode.includes('Matter =')) {
-            injectedLibraries.push('matter-js');
+            detectedLibraries.add('matter-js');
         }
-        if (generatedCode.includes('p5') || generatedCode.includes('createCanvas')) {
-            injectedLibraries.push('p5');
+        if (generatedCode.includes('p5') || generatedCode.includes('createCanvas') || generatedCode.includes('setup(')) {
+            detectedLibraries.add('p5');
         }
+        if (generatedCode.includes('loadSound') || generatedCode.includes('p5.SoundFile')) {
+            detectedLibraries.add('p5.sound');
+        }
+
+        const injectedLibraries = Array.from(detectedLibraries);
 
         logger.info({ injectedLibraries }, `[AI Backend] Codestral response success. Libs detected: ${injectedLibraries.join(', ')}`);
         logger.debug({ code: generatedCode }, `[AI Backend] Generated Code for prompt "${prompt}":\n${generatedCode}`);
