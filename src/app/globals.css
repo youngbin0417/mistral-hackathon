@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Hide the Blockly keyboard navigation cursor/marker that gets left behind */
+.blocklyCursor,
+.blocklyMarker {
+    display: none !important;
+}
+
+/* Hide scrollbars completely */
+.blocklyScrollbarHandle,
+.blocklyScrollbarBackground {
+    display: none !important;
+}
