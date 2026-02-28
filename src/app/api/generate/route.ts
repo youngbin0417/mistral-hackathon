@@ -1,12 +1,48 @@
 import { NextResponse } from 'next/server';
 import { Mistral } from '@mistralai/mistralai';
 import { logger } from '@/lib/logger';
+import { redis } from '@/lib/redis';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
     try {
+        if (!process.env.MISTRAL_API_KEY) {
+            return NextResponse.json({
+                error: "MISTRAL_API_KEY is missing. Please add it to your .env file."
+            }, { status: 500 });
+        }
+
+        const ip = req.headers.get('x-forwarded-for') || 'anonymous';
+        const ratelimit = await rateLimit(`generate:${ip}`, 10, 60);
+
+        if (!ratelimit.success) {
+            return NextResponse.json(
+                { error: "Too many requests. Please wait a minute." },
+                { status: 429 }
+            );
+        }
+
         const { prompt, context } = await req.json();
 
         logger.info({ prompt }, `[AI Backend] Requesting Mistral API for prompt: "${prompt}"`);
+
+        // Check if cached first
+        const cacheKey = `magic:prompt:${encodeURIComponent(prompt)}`;
+        try {
+            const cachedCode = await redis.get(cacheKey);
+            if (cachedCode) {
+                logger.info({ prompt }, `[AI Backend] Cache hit for "${prompt}"`);
+                const parsed = JSON.parse(cachedCode);
+
+                // Add to recent magics list (store prompt and code)
+                await redis.lpush('recent:magics', JSON.stringify({ prompt, code: parsed.code, timestamp: Date.now() }));
+                await redis.ltrim('recent:magics', 0, 49); // Keep last 50
+
+                return NextResponse.json(parsed);
+            }
+        } catch (redisErr) {
+            logger.warn({ err: redisErr }, `[AI Backend] Redis cache lookup failed, treating as cache miss`);
+        }
 
         const apiKey = process.env.MISTRAL_API_KEY;
         if (!apiKey) {
@@ -16,31 +52,13 @@ export async function POST(req: Request) {
 
         const client = new Mistral({ apiKey });
 
-        const SYSTEM_PROMPT = `You are Codestral, an expert creative coder. 
-The user placed a "Magic Block" with natural language in their block program.
-
-CONTEXT (SURROUNDING CODE):
-${context?.fullCode || "// No existing code"}
-
-MAGIC REQUEST: "${prompt}"
-
-GENERATE JavaScript code that:
-1. Wrap EVERYTHING in a block scope \`{ ... }\` to avoid naming conflicts with other blocks.
-2. Use 'var' instead of 'const/let' for variables if they need to be global, or just use the block scope.
-3. APPROACH (Choose ONE):
-   - VISUALS: Use 'p5.js' for particles, visuals. Use instance mode \`new p5(s => { s.setup = () => { s.createCanvas(window.innerWidth, window.innerHeight).parent('app'); s.clear(); }; s.draw = () => { ... } }, document.getElementById('app'))\`.
-   - PHYSICS: Use 'Matter.js' for bouncing/gravity.
-   - DOM: Use vanilla JS to animate.
-4. CONTINUITY: If the context code includes \`createSprite("Hero", ...)\`, the sprite is stored in \`window.entities["Hero"]\`.
-   - You can move ALL sprites using \`window.moveForward(10)\` or \`window.turnRight(90)\`.
-   - You can modify a specific sprite: \`if(window.entities["Hero"]) window.entities["Hero"].x += 5;\`.
-5. Provide brief, kid-friendly comments in Korean explaining the "magic".
-
-IMPORTANT RULES:
-- Return ONLY valid, executable JavaScript code inside the \`{ ... }\` scope.
-- Start directly with raw JS. DO NOT use markdown code blocks (\`\`\`js).
-- DO NOT overwrite \`window.entities\` or \`window.createSprite\`.
-- Keep it simple and creative!`;
+        const SYSTEM_PROMPT = `You are a professional creative coder. 
+The user will provide a prompt for a visual or interactive effect. 
+Generate the most high-quality, impressive, and complete JavaScript code possible using p5.js or Matter.js.
+Return ONLY raw JavaScript code. 
+DO NOT use markdown code blocks. 
+DO NOT include explanations unless they are in code comments.
+Ensure the code is self-contained and runs immediately.`;
 
         const chatResponse = await client.chat.complete({
             model: 'codestral-latest',
@@ -48,7 +66,6 @@ IMPORTANT RULES:
                 { role: 'system', content: SYSTEM_PROMPT },
                 { role: 'user', content: prompt }
             ]
-            // Codestral is optimized for code generation
         });
 
         let rawContent = chatResponse.choices?.[0]?.message?.content || "";
@@ -69,8 +86,20 @@ IMPORTANT RULES:
         }
 
         logger.info({ injectedLibraries }, `[AI Backend] Codestral response success. Libs detected: ${injectedLibraries.join(', ')}`);
+        logger.debug({ code: generatedCode }, `[AI Backend] Generated Code for prompt "${prompt}":\n${generatedCode}`);
 
-        return NextResponse.json({ code: generatedCode, injectedLibraries });
+        const responseData = { code: generatedCode, injectedLibraries };
+
+        // Save to cache and recent list
+        try {
+            await redis.set(cacheKey, JSON.stringify(responseData), 'EX', 60 * 60 * 24 * 7); // Cache for 7 days
+            await redis.lpush('recent:magics', JSON.stringify({ prompt, code: generatedCode, timestamp: Date.now() }));
+            await redis.ltrim('recent:magics', 0, 49);
+        } catch (redisErr) {
+            logger.warn({ err: redisErr }, `[AI Backend] Failed to store in Redis`);
+        }
+
+        return NextResponse.json(responseData);
     } catch (error: any) {
         logger.error({ err: error.message || error }, "[AI Backend] Mistral API Error");
         return NextResponse.json({ error: "Failed to generate code via Mistral" }, { status: 500 });

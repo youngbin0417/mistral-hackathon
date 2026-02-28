@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { SandpackProvider, SandpackLayout, SandpackCodeEditor, useSandpack } from "@codesandbox/sandpack-react";
 import { Play, Code, X, Sparkles, AlertCircle, MoveHorizontal } from "lucide-react";
 import dynamic from 'next/dynamic';
@@ -26,8 +26,22 @@ const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), 
 
 // prependImports is now imported from @/lib/codeTransform
 
+import toast, { Toaster } from 'react-hot-toast';
+
 export default function Home() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [code, setCode] = useState(`// Start dragging blocks!`);
+  const codeRef = useRef(code);
+  useEffect(() => { codeRef.current = code; }, [code]);
+
   const [injectedLibs, setInjectedLibs] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -35,22 +49,30 @@ export default function Home() {
   const [healingMessage, setHealingMessage] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const [aiCache, setAiCache] = useState<Record<string, AiCacheEntry>>({});
-  // Keep a ref so event handlers always see the latest cache without stale closure
   const aiCacheRef = useRef<Record<string, AiCacheEntry>>({});
+  const healingAttemptsRef = useRef<Record<string, number>>({});
 
   const handleCodeChange = (rawCode: string) => {
-    // Apply all cached replacements using the validated utility
-    const { processedCode, uncachedPrompts } = applyCachedReplacements(rawCode, aiCacheRef.current);
+    // 1. 블록 삭제 시 캐시에서도 정리 (안쓰는 import 제거 효과)
+    let cacheChanged = false;
+    const newCache = { ...aiCacheRef.current };
+    Object.keys(newCache).forEach(prompt => {
+      if (!rawCode.includes(`// AI: ${prompt}`)) {
+        delete newCache[prompt];
+        cacheChanged = true;
+      }
+    });
 
-    // Collect all libs from cached entries and prepend imports
-    const allLibs = Array.from(
-      new Set(Object.values(aiCacheRef.current).flatMap(e => e.libs))
-    );
+    if (cacheChanged) {
+      aiCacheRef.current = newCache;
+      setAiCache(newCache);
+    }
+
+    const { processedCode, uncachedPrompts } = applyCachedReplacements(rawCode, aiCacheRef.current);
+    const allLibs = Array.from(new Set(Object.values(aiCacheRef.current).flatMap(e => e.libs)));
     const finalCode = allLibs.length > 0 ? prependImports(processedCode, allLibs) : processedCode;
 
     setCode(finalCode);
-
-    // Trigger AI generation for the first uncached prompt (avoid duplicate requests)
     if (uncachedPrompts.length > 0 && !isGenerating) {
       triggerAiGeneration(uncachedPrompts[0], rawCode);
     }
@@ -62,37 +84,29 @@ export default function Home() {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt,
-          context: { fullCode: fullRawCode }
-        })
+        body: JSON.stringify({ prompt, context: { fullCode: fullRawCode } })
       });
 
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "AI Generation failed");
+      }
       const data = await response.json();
       if (data.code) {
-        // Clean up any accidental markdown fences from the LLM
         const cleanCode = stripMarkdownFences(data.code);
         const newLibs: string[] = data.injectedLibraries || [];
         const newEntry: AiCacheEntry = { code: cleanCode, libs: newLibs };
 
-        // Update both the ref (for synchronous access) and state (for re-render)
         aiCacheRef.current = { ...aiCacheRef.current, [prompt]: newEntry };
         setAiCache(aiCacheRef.current);
+        if (newLibs.length > 0) setInjectedLibs(prev => Array.from(new Set([...prev, ...newLibs])));
 
-        if (newLibs.length > 0) {
-          setInjectedLibs(prev => Array.from(new Set([...prev, ...newLibs])));
-        }
-
-        // Now apply the freshly populated cache to the original raw Blockly code
-        // so the marker gets replaced without waiting for the next Blockly event
         const { processedCode } = applyCachedReplacements(fullRawCode, aiCacheRef.current);
-        const allLibs = Array.from(
-          new Set(Object.values(aiCacheRef.current).flatMap(e => e.libs))
-        );
-        const finalCode = allLibs.length > 0 ? prependImports(processedCode, allLibs) : processedCode;
-        setCode(finalCode);
+        const allLibs = Array.from(new Set(Object.values(aiCacheRef.current).flatMap(e => e.libs)));
+        setCode(allLibs.length > 0 ? prependImports(processedCode, allLibs) : processedCode);
       }
-    } catch (err) {
+    } catch (err: any) {
+      toast.error(err.message || "AI Magic failed! Please try again.");
       console.error("AI Generation failed:", err);
     } finally {
       setIsGenerating(false);
@@ -104,51 +118,112 @@ export default function Home() {
     const { sandpack } = useSandpack();
     const runtimeError = sandpack.error;
 
-    React.useEffect(() => {
+    useEffect(() => {
       if (runtimeError && runtimeError.message !== lastError && !isHealing) {
         handleHeal(runtimeError.message);
       }
-    }, [runtimeError]);
+    }, [runtimeError, isHealing]);
 
     return null;
   };
 
   const handleHeal = async (errorMessage: string) => {
+    const attempts = healingAttemptsRef.current[errorMessage] || 0;
+    if (attempts >= 3) {
+      toast.error("I tried my best, but couldn't fix this error. Please adjust the blocks manually.");
+      setLastError(errorMessage); // Stop trying
+      return;
+    }
+
+    healingAttemptsRef.current[errorMessage] = attempts + 1;
     setLastError(errorMessage);
     setIsHealing(true);
-    setHealingMessage("Detecting error... AI is fixing it! ✨");
+    setHealingMessage("AI is analyzing the bug... 🧐");
 
     try {
       const response = await fetch('/api/heal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: errorMessage, code })
+        body: JSON.stringify({ error: errorMessage, code: codeRef.current })
       });
 
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Self-healing failed");
+      }
       const data = await response.json();
       if (data.fixedCode) {
-        setHealingMessage(data.explanation || "I fixed the bug! Re-running...");
-        // Delay slightly so the user can see the explanation
+        setHealingMessage(data.explanation || "Bug fixed! ✨");
         setTimeout(() => {
           setCode(data.fixedCode);
           setIsHealing(false);
           setHealingMessage(null);
+          toast.success("Self-Healed successfully!");
         }, 3000);
       }
-    } catch (err) {
-      console.error("Healing failed:", err);
+    } catch (err: any) {
+      toast.error(err.message || "Self-healing failed. Maybe check your prompts?");
       setIsHealing(false);
       setHealingMessage(null);
     }
   };
 
+  // --- Recent Magic Component ---
+  const RecentMagics = () => {
+    const [recent, setRecent] = useState<any[]>([]);
+
+    useEffect(() => {
+      const fetchRecent = async () => {
+        try {
+          const res = await fetch('/api/recent');
+          const data = await res.json();
+          if (data.recent) setRecent(data.recent);
+        } catch (e) {
+          console.error("Failed to fetch recent magics", e);
+        }
+      };
+
+      fetchRecent();
+      const interval = setInterval(fetchRecent, 20000); // 20s interval
+      return () => clearInterval(interval);
+    }, []);
+
+    if (recent.length === 0) return null;
+
+    return (
+      <div className="mt-4 bg-gray-900/80 border border-gray-800 rounded-lg p-3 backdrop-blur-md">
+        <h3 className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+          <Sparkles size={14} className="animate-pulse" />
+          Recent Community Magics
+        </h3>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          {recent.map((m: any, i: number) => (
+            <div
+              key={i}
+              className="flex-shrink-0 bg-black/40 border border-gray-800 hover:border-pink-500/50 p-2 rounded-md transition-all cursor-help group"
+              title={m.prompt}
+            >
+              <p className="text-[10px] text-cyan-400 font-mono mb-1 tracking-tighter opacity-70">
+                {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+              <p className="text-xs text-white group-hover:text-pink-400 transition-colors">
+                ✨ {m.prompt.length > 25 ? m.prompt.substring(0, 25) + '...' : m.prompt}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col h-screen min-h-screen p-4 bg-gray-950 text-white font-sans">
-      <header className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-cyan-400 bg-clip-text text-transparent">
+    <div className="flex flex-col h-[100dvh] p-2 md:p-4 bg-gray-950 text-white font-sans overflow-hidden">
+      <Toaster position="bottom-right" reverseOrder={false} />
+      <header className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-pink-500 to-cyan-400 bg-clip-text text-transparent">
           Mistral Snap & Build
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           {injectedLibs.length > 0 && (
             <div className="flex gap-1 mr-2">
               {injectedLibs.map(lib => (
@@ -188,10 +263,10 @@ export default function Home() {
       )}
 
       {/* Main Layout with Resizable Panels */}
-      <div className="flex flex-1 gap-2 overflow-hidden px-1">
-        <Group orientation="horizontal">
+      <div className="flex flex-1 gap-2 overflow-hidden px-1 pb-2">
+        <Group orientation={isMobile ? "vertical" : "horizontal"}>
           {/* Blockly Area */}
-          <Panel defaultSize={60} minSize={30} className="flex flex-col">
+          <Panel defaultSize={50} minSize={30} className="flex flex-col">
             <div className="flex-1 bg-gray-900 border border-gray-800 rounded-lg p-2 flex flex-col relative overflow-hidden group">
               <div className="flex items-center justify-between mb-2 px-2">
                 <h2 className="text-lg font-semibold text-cyan-400">Blockly Workspace</h2>
@@ -349,38 +424,48 @@ export default function Home() {
 
                   <SelfHealer />
 
-                  {/* Massive Preview Modal */}
-                  {isPreviewModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black bg-opacity-80 p-6 backdrop-blur-md">
-                      {/* Modal Header */}
-                      <div className="w-full max-w-6xl flex justify-between items-center p-4 bg-gray-900 border border-b-0 border-pink-500 rounded-t-xl shadow-[0_0_30px_rgba(236,72,153,0.3)] z-10">
-                        <h3 className="text-xl font-bold flex items-center gap-2 text-pink-400">
-                          <Play size={20} fill="currentColor" />
-                          Live Magic Preview
-                        </h3>
-                        <button
-                          onClick={() => setIsPreviewModalOpen(false)}
-                          className="text-gray-400 hover:text-white transition-colors bg-gray-800 hover:bg-gray-700 p-1.5 rounded-full"
-                        >
-                          <X size={20} />
-                        </button>
-                      </div>
-                      {/* Modal Body */}
-                      <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-pink-500 rounded-b-xl overflow-hidden relative shadow-[0_0_50px_rgba(236,72,153,0.2)]">
-                        {isHealing && (
-                          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
-                            <AlertCircle className="text-pink-500 mb-4 animate-pulse" size={48} />
-                            <h4 className="text-2xl font-bold text-white mb-2 underline decoration-pink-500">Self-Healing in Progress</h4>
-                            <p className="text-pink-300 text-lg italic animate-pulse">"{healingMessage}"</p>
-                          </div>
-                        )}
+                </SandpackProvider>
+              </div>
+            </div>
+          </Panel>
+        </Group>
+      </div>
 
-                        {/* Robust Local Iframe Preview */}
-                        <iframe
-                          className="w-full h-full border-none bg-[#0a0a0f]"
-                          title="Magic Preview"
-                          sandbox="allow-scripts allow-modals"
-                          srcDoc={`
+      <RecentMagics />
+
+
+      {/* Massive Preview Modal */}
+      {isPreviewModalOpen && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black bg-opacity-80 p-6 backdrop-blur-md">
+          {/* Modal Header */}
+          <div className="w-full max-w-6xl flex justify-between items-center p-4 bg-gray-900 border border-b-0 border-pink-500 rounded-t-xl shadow-[0_0_30px_rgba(236,72,153,0.3)] z-10">
+            <h3 className="text-xl font-bold flex items-center gap-2 text-pink-400">
+              <Play size={20} fill="currentColor" />
+              Live Magic Preview
+            </h3>
+            <button
+              onClick={() => setIsPreviewModalOpen(false)}
+              className="text-gray-400 hover:text-white transition-colors bg-gray-800 hover:bg-gray-700 p-1.5 rounded-full"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          {/* Modal Body */}
+          <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-pink-500 rounded-b-xl overflow-hidden relative shadow-[0_0_50px_rgba(236,72,153,0.2)]">
+            {isHealing && (
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
+                <AlertCircle className="text-pink-500 mb-4 animate-pulse" size={48} />
+                <h4 className="text-2xl font-bold text-white mb-2 underline decoration-pink-500">Self-Healing in Progress</h4>
+                <p className="text-pink-300 text-lg italic animate-pulse">"{healingMessage}"</p>
+              </div>
+            )}
+
+            {/* Robust Local Iframe Preview */}
+            <iframe
+              className="w-full h-full border-none bg-[#0a0a0f]"
+              title="Magic Preview"
+              sandbox="allow-scripts allow-modals"
+              srcDoc={`
                           <!DOCTYPE html>
                           <html>
                           <head>
@@ -458,6 +543,7 @@ export default function Home() {
                                   canvas.width = window.innerWidth;
                                   canvas.height = window.innerHeight;
                               });
+                            </script>
                             <script type="module">
                               window.addEventListener('error', (e) => {
                                 console.error("Runtime Error:", e.message);
@@ -468,16 +554,10 @@ export default function Home() {
                           </body>
                           </html>
                         `}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </SandpackProvider>
-              </div>
-            </div>
-          </Panel>
-        </Group>
-      </div>
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,9 +1,27 @@
 import { NextResponse } from 'next/server';
 import { Mistral } from '@mistralai/mistralai';
 import { logger } from '@/lib/logger';
+import { redis } from '@/lib/redis';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
     try {
+        if (!process.env.MISTRAL_API_KEY) {
+            return NextResponse.json({
+                error: "MISTRAL_API_KEY is missing. Please add it to your .env file."
+            }, { status: 500 });
+        }
+
+        const ip = req.headers.get('x-forwarded-for') || 'anonymous';
+        const ratelimit = await rateLimit(`heal:${ip}`, 10, 60);
+
+        if (!ratelimit.success) {
+            return NextResponse.json(
+                { error: "Too many requests. Please wait a minute." },
+                { status: 429 }
+            );
+        }
+
         const { error, code, prompt } = await req.json();
 
         logger.info({ error }, `[AI Heal] Requesting Mistral API to fix error: "${error}"`);
