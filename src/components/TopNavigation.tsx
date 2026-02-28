@@ -1,4 +1,5 @@
 import React from 'react';
+import { Rocket, Sparkles, Zap } from 'lucide-react';
 
 interface TopNavigationProps {
     injectedLibs: string[];
@@ -7,35 +8,44 @@ interface TopNavigationProps {
 
 export default function TopNavigation({ injectedLibs, isGenerating }: TopNavigationProps) {
     return (
-        <header className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-pink-500 to-cyan-400 bg-clip-text text-transparent">
-                Mistral Snap & Build
-            </h1>
-            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        <header className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--card)]/80 backdrop-blur-md mb-0">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--neon-cyan)] to-[var(--neon-purple)] flex items-center justify-center glow-cyan animate-float">
+                    <Rocket className="w-5 h-5 text-[var(--background)]" />
+                </div>
+                <div>
+                    <h1 className="text-lg font-bold tracking-tight">
+                        <span className="text-[var(--neon-cyan)] text-glow-cyan">Snap</span>
+                        <span className="text-[var(--foreground)]"> & </span>
+                        <span className="text-[var(--neon-pink)] text-glow-pink">Build</span>
+                    </h1>
+                    <p className="text-[10px] text-gray-500 font-medium tracking-widest uppercase">
+                        Powered by Mistral AI
+                    </p>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-3">
                 {injectedLibs.length > 0 && (
-                    <div className="flex gap-1 mr-2">
+                    <div className="flex gap-1.5 mr-2">
                         {injectedLibs.map(lib => (
-                            <span key={lib} className="text-xs bg-cyan-900 border border-cyan-500 text-cyan-300 px-2 py-0.5 rounded animate-pulse">
-                                {lib} loaded
+                            <span key={lib} className="text-[10px] font-semibold bg-[var(--neon-cyan)]/10 border border-[var(--neon-cyan)]/30 text-[var(--neon-cyan)] px-2.5 py-1 rounded-xl">
+                                {lib}
                             </span>
                         ))}
                     </div>
                 )}
                 {isGenerating && (
-                    <div className="flex items-center gap-3 bg-pink-500/10 border border-pink-500/50 px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.3)]">
-                        <div className="relative flex items-center justify-center w-5 h-5">
-                            <div className="absolute inset-0 bg-pink-500 rounded-full animate-ping opacity-75"></div>
-                            <div className="relative bg-pink-600 w-3 h-3 rounded-full shadow-[0_0_10px_#ec4899]"></div>
-                            <div className="absolute w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                        <span className="text-xs font-bold tracking-widest text-pink-400 uppercase">
-                            AI Neural Processing...
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--neon-pink)]/10 to-[var(--neon-purple)]/10 border border-[var(--neon-pink)]/30 magic-pulse">
+                        <Sparkles className="w-4 h-4 text-[var(--neon-pink)] animate-spin" />
+                        <span className="text-xs font-semibold text-[var(--neon-pink)] tracking-wider uppercase">
+                            AI Processing...
                         </span>
                     </div>
                 )}
-                <div className="text-sm text-gray-400 border border-gray-800 px-3 py-1 rounded-full flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></div>
-                    Phase 5 Self-Healing
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--neon-green)]/10 border border-[var(--neon-green)]/30">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
+                    <span className="text-[10px] text-gray-400 font-medium">Codestral Connected</span>
                 </div>
             </div>
         </header>

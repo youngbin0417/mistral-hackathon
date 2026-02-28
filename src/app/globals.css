@@ -1,38 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @import "tailwindcss";
 
-/* --- Cyberpunk Blockly Styles --- */
+:root {
+    --background: #0d0d14;
+    --foreground: #e0e4ef;
+
+    --card: #12121c;
+    --card-foreground: #e0e4ef;
+
+    --border: #1e1e30;
+    --input: #1e1e30;
+
+    --neon-cyan: #00e5ff;
+    --neon-pink: #ff00c8;
+    --neon-purple: #9000ff;
+    --neon-green: #00ff88;
+    --neon-orange: #ff8800;
+    --neon-yellow: #ffd500;
+
+    --glow-cyan: 0 0 10px rgba(0, 229, 255, 0.5), 0 0 30px rgba(0, 229, 255, 0.2);
+    --glow-pink: 0 0 10px rgba(255, 0, 200, 0.5), 0 0 30px rgba(255, 0, 200, 0.2);
+    --glow-purple: 0 0 10px rgba(144, 0, 255, 0.5), 0 0 30px rgba(144, 0, 255, 0.2);
+
+    --radius: 1rem;
+}
+
+/* --- Base --- */
+body,
+html {
+    margin: 0;
+    padding: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: 'Fredoka', sans-serif;
+    overflow: hidden;
+}
+
+code,
+pre,
+.font-mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* --- Glow Utilities --- */
+.glow-cyan {
+    box-shadow: var(--glow-cyan);
+}
+
+.glow-pink {
+    box-shadow: var(--glow-pink);
+}
+
+.glow-purple {
+    box-shadow: var(--glow-purple);
+}
+
+.text-glow-cyan {
+    text-shadow: 0 0 12px rgba(0, 229, 255, 0.7);
+}
+
+.text-glow-pink {
+    text-shadow: 0 0 12px rgba(255, 0, 200, 0.7);
+}
+
+/* --- Grid Background Pattern --- */
+.grid-bg {
+    background-image:
+        linear-gradient(rgba(30, 30, 48, 0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30, 30, 48, 0.5) 1px, transparent 1px);
+    background-size: 30px 30px;
+}
+
+/* ==============================================
+   BLOCKLY WORKSPACE PREMIUM STYLING
+   Matching magic-canvas reference design
+   ============================================== */
+
+/* Container */
+.blockly-workspace-container {
+    border-radius: 0;
+    overflow: hidden;
+}
+
+/* Main workspace background */
 .blocklySvg {
     background-color: transparent !important;
 }
 
-.blocklyPath {
-    stroke-width: 1.5px !important;
-    filter: drop-shadow(0 0 2px rgba(0, 240, 255, 0.4));
-}
-
 .blocklyMainBackground {
-    fill: #0a0a0f !important;
+    fill: var(--background) !important;
+    rx: 0;
 }
 
-/* Specific Magic Block Glow */
-[fill="#ff00ff"].blocklyPath {
-    filter: drop-shadow(0 0 8px #ff00ff) drop-shadow(0 0 15px #ff00ff);
+/* --- Toolbox: FULLY HIDDEN (replaced by custom React palette bar) --- */
+.blocklyToolboxDiv,
+.blocklyToolboxContents,
+.blocklyTreeRoot {
+    position: absolute !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
-.blocklyTreeLabel {
-    color: #00f0ff !important;
-    font-family: inherit;
-    font-weight: bold;
-    text-shadow: 0 0 5px #00f0ff70;
+/* --- Flyout (Block picker popup) --- */
+.blocklyFlyoutBackground {
+    fill: #12121e !important;
+    fill-opacity: 0.97 !important;
 }
 
-.blocklyToolboxDiv {
-    background-color: #0d0d14 !important;
-    border-right: 1px solid #1a1a2e !important;
-    padding: 8px !important;
+.blocklyFlyout {
+    border-right: 1px solid var(--border);
 }
 
-/* AI Neural Scanline Animation */
+/* --- Block Styling (Zelos renderer) --- */
+.blocklyPath {
+    stroke-width: 1px !important;
+    stroke-opacity: 0.25 !important;
+    filter: none !important;
+    transition: filter 0.2s ease;
+}
+
+/* Block hover glow */
+.blocklyDraggable:hover>.blocklyPath {
+    filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.3)) !important;
+}
+
+/* Block selected glow */
+.blocklySelected>.blocklyPath {
+    stroke: var(--neon-cyan) !important;
+    stroke-width: 2px !important;
+    stroke-opacity: 0.8 !important;
+    filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.4)) !important;
+}
+
+/* Magic blocks get extra special glow */
+.blocklyDraggable .blocklyPath[fill="#ff00c8"],
+.blocklyDraggable .blocklyPath[fill="#e600b4"],
+.blocklyDraggable .blocklyPathDark[fill="#a6008a"] {
+    filter: drop-shadow(0 0 6px rgba(255, 0, 200, 0.4)) drop-shadow(0 0 12px rgba(255, 0, 200, 0.15)) !important;
+}
+
+/* --- Field Inputs inside blocks --- */
+.blocklyEditableText>rect {
+    rx: 8 !important;
+    ry: 8 !important;
+    fill: rgba(0, 0, 0, 0.25) !important;
+    stroke: rgba(255, 255, 255, 0.08) !important;
+    stroke-width: 1px !important;
+}
+
+.blocklyText {
+    font-family: 'Fredoka', sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 11px !important;
+    fill: #ffffff !important;
+}
+
+.blocklyDropdownText {
+    font-family: 'Fredoka', sans-serif !important;
+    font-weight: 500 !important;
+}
+
+/* Field input hover */
+.blocklyEditableText:hover>rect {
+    fill: rgba(0, 0, 0, 0.35) !important;
+    stroke: rgba(0, 229, 255, 0.2) !important;
+}
+
+/* Editing HTML Input (When user clicks to type) */
+.blocklyHtmlInput {
+    background-color: #1e1e30 !important;
+    color: #ffffff !important;
+    border: 1px solid var(--neon-cyan) !important;
+    border-radius: 4px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    padding: 2px 4px !important;
+    outline: none !important;
+}
+
+/* --- Trashcan --- */
+.blocklyTrash {
+    opacity: 0.4 !important;
+    transition: opacity 0.2s ease !important;
+}
+
+.blocklyTrash:hover {
+    opacity: 0.8 !important;
+}
+
+/* --- Zoom Controls --- */
+.blocklyZoom>image {
+    opacity: 0.3 !important;
+    transition: opacity 0.2s ease !important;
+}
+
+.blocklyZoom>image:hover {
+    opacity: 0.7 !important;
+}
+
+/* --- Connection indicators --- */
+.blocklyInsertionMarker>.blocklyPath {
+    stroke: var(--neon-cyan) !important;
+    stroke-width: 2px !important;
+    fill: transparent !important;
+    filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.5)) !important;
+}
+
+/* --- Grid dots (rendered by Blockly) --- */
+.blocklyGridLine {
+    stroke: #1e1e30 !important;
+}
+
+/* --- Scrollbar --- */
+.blocklyScrollbarHandle {
+    fill: #1e1e30 !important;
+    rx: 3 !important;
+    ry: 3 !important;
+    opacity: 0.4 !important;
+}
+
+.blocklyScrollbarBackground {
+    opacity: 0 !important;
+}
+
+.blocklyScrollbarVertical,
+.blocklyScrollbarHorizontal,
+.blocklyFlyoutScrollbar {
+    display: none !important;
+}
+
+/* ==============================================
+   END BLOCKLY STYLING
+   ============================================== */
+
+/* --- AI Neural Scanline Animation --- */
 @keyframes scanline {
     0% {
         transform: translateY(0);
@@ -57,64 +267,99 @@
     animation: scanline 2.5s linear infinite;
 }
 
-/* Glassmorphism Sidebar */
+/* --- Magic Pulse Animation --- */
+@keyframes magic-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(255, 0, 200, 0.4), 0 0 30px rgba(144, 0, 255, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(255, 0, 200, 0.6), 0 0 50px rgba(0, 229, 255, 0.3);
+    }
+}
+
+.magic-pulse {
+    animation: magic-pulse 2s ease-in-out infinite;
+}
+
+/* --- Float Animation --- */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* --- Glassmorphism --- */
 .glass {
     background: rgba(13, 13, 20, 0.7) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 229, 255, 0.1);
 }
 
-/* Cyberpunk Glow Background */
-.bg-cyber {
-    background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0f 100%);
+/* --- AI Generation BG Pulse --- */
+.blockly-generating {
+    position: relative;
 }
 
-/* Magic Block Pulse during AI generation */
-.generating-ai {
-    filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.6));
-    animation: bg-pulse 2s infinite alternate ease-in-out;
+.blockly-generating::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--neon-pink);
+    border-radius: 0;
+    pointer-events: none;
+    animation: border-glow 2s ease-in-out infinite;
+    z-index: 40;
 }
 
-@keyframes bg-pulse {
-    from {
-        opacity: 0.8;
-        transform: scale(0.99);
+@keyframes border-glow {
+
+    0%,
+    100% {
+        border-color: rgba(255, 0, 200, 0.3);
+        box-shadow: inset 0 0 20px rgba(255, 0, 200, 0.05);
     }
 
-    to {
-        opacity: 1;
-        transform: scale(1.01);
+    50% {
+        border-color: rgba(255, 0, 200, 0.6);
+        box-shadow: inset 0 0 40px rgba(255, 0, 200, 0.1);
     }
 }
 
-/* Custom Scrollbar for Code Area */
-.custom-scrollbar::-webkit-scrollbar {
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+::-webkit-scrollbar-track {
+    background: var(--background);
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #1a1a2e;
-    border-radius: 10px;
+::-webkit-scrollbar-thumb {
+    background: #1e1e30;
+    border-radius: 3px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #33334d;
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 229, 255, 0.4);
 }
 
-
-/* Hide the Blockly keyboard navigation cursor/marker that gets left behind */
+/* --- Blockly Marker/Cursor Hide --- */
 .blocklyCursor,
 .blocklyMarker {
-    display: none !important;
-}
-
-/* Hide scrollbars completely */
-.blocklyScrollbarHandle,
-.blocklyScrollbarBackground {
     display: none !important;
 }
