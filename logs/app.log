@@ -1,0 +1,13 @@
+{"level":30,"time":1772278846870,"pid":54296,"hostname":"youngbin_thinkp","prompt":"test","msg":"[AI Backend] Requesting Mistral API for prompt: \"test\""}
+{"level":30,"time":1772278849108,"pid":54296,"hostname":"youngbin_thinkp","injectedLibraries":[],"msg":"[AI Backend] Codestral response success. Libs detected: "}
+{"level":30,"time":1772279090637,"pid":54296,"hostname":"youngbin_thinkp","prompt":"make it sparkle","msg":"[AI Backend] Requesting Mistral API for prompt: \"make it sparkle\""}
+{"level":30,"time":1772279090653,"pid":54296,"hostname":"youngbin_thinkp","prompt":"make it sparkle","msg":"[AI Backend] Requesting Mistral API for prompt: \"make it sparkle\""}
+{"level":30,"time":1772279090665,"pid":54296,"hostname":"youngbin_thinkp","prompt":"make it sparkle","msg":"[AI Backend] Requesting Mistral API for prompt: \"make it sparkle\""}
+{"level":30,"time":1772279090675,"pid":54296,"hostname":"youngbin_thinkp","prompt":"make it sparkle","msg":"[AI Backend] Requesting Mistral API for prompt: \"make it sparkle\""}
+{"level":30,"time":1772279090689,"pid":54296,"hostname":"youngbin_thinkp","prompt":"make it sparkle","msg":"[AI Backend] Requesting Mistral API for prompt: \"make it sparkle\""}
+{"level":30,"time":1772279090701,"pid":54296,"hostname":"youngbin_thinkp","prompt":"make it sparkle","msg":"[AI Backend] Requesting Mistral API for prompt: \"make it sparkle\""}
+{"level":30,"time":1772279092364,"pid":54296,"hostname":"youngbin_thinkp","injectedLibraries":["p5"],"msg":"[AI Backend] Codestral response success. Libs detected: p5"}
+{"level":30,"time":1772279092377,"pid":54296,"hostname":"youngbin_thinkp","prompt":"make it sparkle","msg":"[AI Backend] Requesting Mistral API for prompt: \"make it sparkle\""}
+{"level":30,"time":1772279094405,"pid":54296,"hostname":"youngbin_thinkp","injectedLibraries":["p5"],"msg":"[AI Backend] Codestral response success. Libs detected: p5"}
+{"level":30,"time":1772279095134,"pid":54296,"hostname":"youngbin_thinkp","injectedLibraries":["p5"],"msg":"[AI Backend] Codestral response success. Libs detected: p5"}
+{"level":30,"time":1772279097813,"pid":54296,"hostname":"youngbin_thinkp","injectedLibraries":["p5"],"msg":"[AI Backend] Codestral response success. Libs detected: p5"}

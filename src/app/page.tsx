@@ -458,14 +458,12 @@ export default function Home() {
                                   canvas.width = window.innerWidth;
                                   canvas.height = window.innerHeight;
                               });
-                            </script>
                             <script type="module">
-                              try {
-                                ${code}
-                              } catch (e) {
+                              window.addEventListener('error', (e) => {
                                 console.error("Runtime Error:", e.message);
                                 window.parent.postMessage({ type: 'error', message: e.message }, '*');
-                              }
+                              });
+                              ${code}
                             </script>
                           </body>
                           </html>

@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import { Mistral } from '@mistralai/mistralai';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
     try {
         const { prompt, context } = await req.json();
 
-        console.log(`[AI Backend] Requesting Mistral API for prompt: "${prompt}"`);
+        logger.info({ prompt }, `[AI Backend] Requesting Mistral API for prompt: "${prompt}"`);
 
         const apiKey = process.env.MISTRAL_API_KEY;
         if (!apiKey) {
-            console.error("MISTRAL_API_KEY is missing from environment variables.");
+            logger.error("MISTRAL_API_KEY is missing from environment variables.");
             return NextResponse.json({ error: "API key is not configured" }, { status: 500 });
         }
 
@@ -67,11 +68,11 @@ IMPORTANT RULES:
             injectedLibraries.push('p5');
         }
 
-        console.log(`[AI Backend] Codestral response success. Libs detected: ${injectedLibraries.join(', ')}`);
+        logger.info({ injectedLibraries }, `[AI Backend] Codestral response success. Libs detected: ${injectedLibraries.join(', ')}`);
 
         return NextResponse.json({ code: generatedCode, injectedLibraries });
     } catch (error: any) {
-        console.error("[AI Backend] Mistral API Error:", error.message || error);
+        logger.error({ err: error.message || error }, "[AI Backend] Mistral API Error");
         return NextResponse.json({ error: "Failed to generate code via Mistral" }, { status: 500 });
     }
 }

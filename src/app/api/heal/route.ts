@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import { Mistral } from '@mistralai/mistralai';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
     try {
         const { error, code, prompt } = await req.json();
 
-        console.log(`[AI Heal] Requesting Mistral API to fix error: "${error}"`);
+        logger.info({ error }, `[AI Heal] Requesting Mistral API to fix error: "${error}"`);
 
         const apiKey = process.env.MISTRAL_API_KEY;
         if (!apiKey) {
+            logger.error("MISTRAL_API_KEY is missing from environment variables.");
             return NextResponse.json({ error: "API key is not configured" }, { status: 500 });
         }
 
@@ -51,11 +53,11 @@ IMPORTANT RULES:
             result = content;
         }
 
-        console.log(`[AI Heal] Healing successful.`);
+        logger.info("[AI Heal] Healing successful.");
 
         return NextResponse.json(result);
     } catch (error: any) {
-        console.error("[AI Heal] Mistral API Error:", error.message || error);
+        logger.error({ err: error.message || error }, "[AI Heal] Mistral API Error");
         return NextResponse.json({ error: "Failed to heal code via Mistral" }, { status: 500 });
     }
 }

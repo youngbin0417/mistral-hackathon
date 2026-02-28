@@ -252,4 +252,59 @@ describe('Full pipeline: Blockly → extractMakers → applyCached → prependIm
         const finalCode = prependImports(processedCode, allLibs);
         expect(finalCode).toMatch(/^import p5/);
     });
+
+    it('correctly processes a complex combination of multiple blocks and AI magic', () => {
+        // 블록 조합 시뮬레이션: 
+        // 1. Create Sprite
+        // 2. When Clicked -> Move Forward -> AI Magic (bounce)
+        // 3. Always -> AI Magic (sparkle)
+
+        const bounceAI = `{ // 통통 튀게 만들기 ✨\n  if(window.entities["Hero"]) window.entities["Hero"].y -= 10;\n}`;
+        const sparkleAI = `{ // 파티클 뿌리기 ✨\n  // ... p5.js 코드가 들어간다고 가정\n}`;
+
+        const cache = {
+            'bounce like a basketball': { code: bounceAI, libs: ['matter-js'] },
+            'make it sparkle': { code: sparkleAI, libs: ['p5'] }
+        };
+
+        const bounceMarker = makeMagicMarker('bounce like a basketball');
+        const sparkleMarker = makeMagicMarker('make it sparkle');
+
+        const combinedBlocklyCode = `
+if(typeof createSprite === "function") createSprite("Hero", 200, 200);
+
+document.getElementById('app').onclick = function() {
+  if(typeof moveForward === "function") moveForward(10);
+  ${bounceMarker}
+};
+
+window.onFrame = function() {
+  ${sparkleMarker}
+};
+`;
+
+        // step 1: apply cache
+        const { processedCode, uncachedPrompts } = applyCachedReplacements(combinedBlocklyCode, cache);
+
+        // 캐시에 모든 응답이 있으므로 uncached는 없어야 함
+        expect(uncachedPrompts).toHaveLength(0);
+
+        // AI 마커는 모두 사라져야 함
+        expect(processedCode).not.toContain('AI_MAGIC_TRIGGER');
+
+        // 일반 Javascript 코드와 AI 코드가 올바르게 결합되어 있어야 함
+        expect(processedCode).toContain('createSprite("Hero"');
+        expect(processedCode).toContain('moveForward(10);');
+        expect(processedCode).toContain(bounceAI);
+        expect(processedCode).toContain(sparkleAI);
+
+        // step 2: prepend imports
+        // 캐시에 존재하는 모든 라이브러리를 추출
+        const allLibs = Array.from(new Set(Object.values(cache).flatMap(v => v.libs)));
+        const finalCode = prependImports(processedCode, allLibs);
+
+        // matter-js와 p5 import가 모두 맨 위에 추가되어야 함
+        expect(finalCode).toMatch(/import Matter from 'https:\/\/esm\.sh\/matter-js@0\.19\.0';/);
+        expect(finalCode).toMatch(/import p5 from 'https:\/\/esm\.sh\/p5@1\.9\.0';/);
+    });
 });

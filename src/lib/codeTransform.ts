@@ -16,11 +16,11 @@ export interface AiCacheEntry {
  * Blockly generator produces:
  *   \n/* ✨ AI Request: "PROMPT" *\/\n{ console.log('AI_MAGIC_TRIGGER: ESCAPED_PROMPT'); }\n
  *
- * The regex captures the PROMPT group and is designed to match the full
- * marker string (including the leading newline) so that replacements are clean.
+ * Note: Blockly may add indentation (spaces or tabs) when generating code inside other blocks.
+ * This regex accounts for that by allowing optional whitespace before the comment and the console.log line.
  */
 export const AI_MARKER_REGEX =
-    /\n?\/\* ✨ AI Request: "([\s\S]+?)" \*\/\n\{ console\.log\('AI_MAGIC_TRIGGER: [\s\S]+?'\); \}\n/g;
+    /\n?[ \t]*\/\* ✨ AI Request: "([\s\S]+?)" \*\/\n[ \t]*\{ console\.log\('AI_MAGIC_TRIGGER: [\s\S]+?'\); \}\n?/g;
 
 /**
  * Extract all AI Magic Block prompts from raw Blockly-generated code.
