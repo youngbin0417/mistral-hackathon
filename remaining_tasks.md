@@ -1,9 +1,9 @@
 # Remaining Tasks: Mistral Snap & Build
 
 ## 1. AI Intelligence Refinement (P1)
-- [ ] **Agent Chain (Generator -> Refiner)**:
+- [x] **Agent Chain (Generator -> Refiner)**: ✅ Complete
     - Update `/api/generate` to use a two-step process: First generate the logic, then a second Mistral call to "polish" and add comments/error guards.
-- [ ] **Advanced Library Detection**:
+- [x] **Advanced Library Detection**: ✅ Complete
     - Expand detection to include `p5.sound` and `p5.dom`.
 
 ## 2. Infrastructure & Scale (P1)

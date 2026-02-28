@@ -1,0 +1,73 @@
+﻿node.exe : PASS src/lib/__tes
+ts__/codeTransform.test.ts
+위치 C:\Program Files\nodejs\np
+x.ps1:29 문자:3
++   & $NODE_EXE $NPX_CLI_JS $
+args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo           
+   : NotSpecified: (PASS sr  
+  c/lib/__...ansform.test.   
+ ts:String) [], RemoteExc    
+eption
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+FAIL __tests__/api/config.tes
+t.ts
+  ??Test suite failed to run
+
+    ReferenceError: Request i
+s not defined
+
+    [0m [90m 17 |[39m     
+    process[33m.[39menv[33
+m.[39m[33mMISTRAL_API_KEY[
+39m [33m=[39m apiKey[33m;
+[39m
+     [90m 18 |[39m
+    [31m[1m>[22m[39m[90m
+ 19 |[39m         [90m// Sa
+ve to .env file for persisten
+ce[39m
+     [90m    |[39m         
+        [31m[1m^[22m[39m
+     [90m 20 |[39m         
+[36mconst[39m envPath [33m
+=[39m path[33m.[39mjoin(pr
+ocess[33m.[39mcwd()[33m,[
+39m [32m'.env'[39m)[33m;[
+39m
+     [90m 21 |[39m         
+[36mlet[39m envContent [33
+m=[39m [32m''[39m[33m;[3
+9m
+     [90m 22 |[39m         
+[36mif[39m (fs[33m.[39mex
+istsSync(envPath)) {[0m
+
+      at Object.Request (node
+_modules/next/src/server/web/
+spec-extension/request.ts:14:
+34)
+      at Object.<anonymous> (
+node_modules/next/server.js:2
+:16)
+      at Object.<anonymous> (
+src/app/api/config/route.ts:1
+9:17)
+      at Object.<anonymous> (
+__tests__/api/config.test.ts:
+10:16)
+
+PASS __tests__/components/Api
+SetupModal.test.tsx
+
+Test Suites: 1 failed, 2 pass
+ed, 3 total
+Tests:       30 passed, 30 to
+tal
+Snapshots:   0 total
+Time:        3.706 s
+Ran all test suites.
