@@ -2,24 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { SandpackProvider, SandpackLayout, SandpackCodeEditor } from "@codesandbox/sandpack-react";
-import { Play, Code, X, Sparkles, AlertCircle, MoveHorizontal, Maximize2 } from "lucide-react";
+import { Play, X, Sparkles, AlertCircle, Maximize2 } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { Panel, Group, Separator } from 'react-resizable-panels';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import toast, { Toaster } from 'react-hot-toast';
 
 import ApiSetupModal from '@/components/ApiSetupModal';
 import TopNavigation from '@/components/TopNavigation';
 import AIStatusBar from '@/components/AIStatusBar';
-import RecentMagics from '@/components/RecentMagics';
 import SelfHealer from '@/components/SelfHealer';
 import { useAiGeneration } from '@/hooks/useAiGeneration';
 import { useSelfHealer } from '@/hooks/useSelfHealer';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), {
   ssr: false,

@@ -8,7 +8,11 @@ export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: 
     const healingAttemptsRef = useRef<Record<string, number>>({});
 
     const handleHeal = async (errorMessage: string) => {
-        const attempts = healingAttemptsRef.current[errorMessage] || 0;
+        // Track errors by both the message and the specific code state that produced it
+        // This prevents stale counts when the code has changed but throws the same error
+        const errorKey = `${errorMessage}_${codeRef.current}`;
+        const attempts = healingAttemptsRef.current[errorKey] || 0;
+
         if (attempts >= 3) {
             toast.error(
                 "Self-healing limit reached! 🚨 Complex error detected. Please try breaking down your 'Magic Block' logic into smaller steps or manually fix standard blocks.",
@@ -18,7 +22,7 @@ export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: 
             return;
         }
 
-        healingAttemptsRef.current[errorMessage] = attempts + 1;
+        healingAttemptsRef.current[errorKey] = attempts + 1;
         setLastError(errorMessage);
         setIsHealing(true);
         setHealingMessage("AI is analyzing the bug... 🧐");

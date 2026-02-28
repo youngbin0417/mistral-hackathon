@@ -166,13 +166,13 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
       resizeObserver.observe(blocklyDiv.current);
     }
 
-    // Force-hide the native Blockly toolbox using the workspace API
+    // CSS alone is not enough because Blockly calculates SVG positioning based on the toolbox.
+    // We MUST force the toolbox width to 0 via JS and trigger a resize so the workspace takes up the full width.
     let isHiding = false;
     const hideToolbox = () => {
       if (isHiding) return;
       isHiding = true;
 
-      // Method 1: Use Blockly's own API
       const toolbox = workspaceRef.current?.getToolbox();
       if (toolbox) {
         const htmlElement = (toolbox as any).HtmlDiv || (toolbox as any).htmlDiv_;
@@ -182,37 +182,20 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
         }
       }
 
-      // Method 2: Search DOM for any toolbox divs
       document.querySelectorAll('.blocklyToolboxDiv').forEach((el) => {
         const htmlEl = el as HTMLElement;
         htmlEl.style.setProperty('display', 'none', 'important');
         htmlEl.style.setProperty('width', '0px', 'important');
-        htmlEl.style.setProperty('min-width', '0px', 'important');
-        htmlEl.style.setProperty('max-width', '0px', 'important');
-        htmlEl.style.setProperty('overflow', 'hidden', 'important');
-        htmlEl.style.setProperty('visibility', 'hidden', 'important');
       });
-
-      // Method 3: Target the injection div's parent (Blockly wraps in a container)
-      if (blocklyDiv.current) {
-        const injectionDiv = blocklyDiv.current.querySelector('.blocklyToolboxDiv') ||
-          blocklyDiv.current.parentElement?.querySelector('.blocklyToolboxDiv');
-        if (injectionDiv) {
-          (injectionDiv as HTMLElement).style.setProperty('display', 'none', 'important');
-        }
-      }
 
       handleResize();
       isHiding = false;
     };
 
-    // Run after Blockly has finished rendering
     requestAnimationFrame(hideToolbox);
     setTimeout(hideToolbox, 100);
     setTimeout(hideToolbox, 300);
-    setTimeout(hideToolbox, 1000);
 
-    // Watch for Blockly re-painting the toolbox (guarded to avoid infinite loops)
     const observer = new MutationObserver(() => {
       requestAnimationFrame(hideToolbox);
     });

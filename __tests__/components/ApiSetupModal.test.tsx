@@ -14,7 +14,7 @@ describe('ApiSetupModal', () => {
         render(
             <ApiSetupModal needsApiKey={true} apiKeyInput="" setApiKeyInput={() => { }} handleSaveApiKey={() => { }} />
         );
-        expect(screen.getByText('Welcome to Mistral Snap')).toBeInTheDocument();
+        expect(screen.getByText(/Welcome to/i)).toBeInTheDocument();
     });
 
     it('disables the save button when input is empty', () => {

@@ -97,6 +97,7 @@ pre,
 .blocklyToolboxDiv,
 .blocklyToolboxContents,
 .blocklyTreeRoot {
+    display: none !important;
     position: absolute !important;
     width: 0 !important;
     min-width: 0 !important;
