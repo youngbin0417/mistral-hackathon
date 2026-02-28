@@ -148,8 +148,9 @@ Blockly.Blocks['always_loop'] = {
 // Define code generation for the Magic Block
 javascriptGenerator.forBlock['magic_block'] = function (block: any) {
     const prompt = block.getFieldValue('PROMPT');
-    // Wrap in its own block scope to avoid naming conflicts with multiple magic blocks
-    const code = `\n/* ✨ AI Request: "${prompt}" */\n{ console.log('✨ Magic Triggered for: "${prompt}"'); }\n`;
+    // Escape prompt for JS strings
+    const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    const code = `\n/* ✨ AI Request: "${prompt}" */\n{ console.log('AI_MAGIC_TRIGGER: ${escapedPrompt}'); }\n`;
     if (block.getSvgRoot()) {
         block.getSvgRoot().classList.add('magic-block-glow');
     }

@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useState } from 'react';
-import { SandpackProvider, SandpackLayout, SandpackPreview, SandpackCodeEditor, useSandpack } from "@codesandbox/sandpack-react";
-import { Play, Code, X, Sparkles, AlertCircle, Info, MoveHorizontal } from "lucide-react";
+import React, { useState, useRef } from 'react';
+import { SandpackProvider, SandpackLayout, SandpackCodeEditor, useSandpack } from "@codesandbox/sandpack-react";
+import { Play, Code, X, Sparkles, AlertCircle, MoveHorizontal } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import {
+  applyCachedReplacements,
+  prependImports,
+  stripMarkdownFences,
+  type AiCacheEntry,
+} from '@/lib/codeTransform';
 
 // Helper for Tailwind classes
 function cn(...inputs: ClassValue[]) {
@@ -18,17 +24,7 @@ const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), 
   loading: () => <div className="absolute inset-0 flex items-center justify-center text-gray-500">Loading Blockly...</div>
 });
 
-// Prepend import statements dynamically based on AI detection
-const prependImports = (sourceCode: string, libs: string[]) => {
-  let imports = '';
-  if (libs.includes('p5')) {
-    imports += `import p5 from 'https://esm.sh/p5@1.9.0';\n`;
-  }
-  if (libs.includes('matter-js')) {
-    imports += `import Matter from 'https://esm.sh/matter-js@0.19.0';\n`;
-  }
-  return imports + sourceCode;
-};
+// prependImports is now imported from @/lib/codeTransform
 
 export default function Home() {
   const [code, setCode] = useState(`// Start dragging blocks!`);
@@ -38,51 +34,68 @@ export default function Home() {
   const [isHealing, setIsHealing] = useState(false);
   const [healingMessage, setHealingMessage] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [aiCache, setAiCache] = useState<Record<string, AiCacheEntry>>({});
+  // Keep a ref so event handlers always see the latest cache without stale closure
+  const aiCacheRef = useRef<Record<string, AiCacheEntry>>({});
 
-  const handleCodeChange = async (newCode: string) => {
-    // Check if the generated code contains an AI request
-    const aiMarkerMatch = newCode.match(/\/\* ✨ AI Request: "([^"]+)" \*\//);
+  const handleCodeChange = (rawCode: string) => {
+    // Apply all cached replacements using the validated utility
+    const { processedCode, uncachedPrompts } = applyCachedReplacements(rawCode, aiCacheRef.current);
 
-    if (aiMarkerMatch) {
-      const prompt = aiMarkerMatch[1];
-      setIsGenerating(true);
+    // Collect all libs from cached entries and prepend imports
+    const allLibs = Array.from(
+      new Set(Object.values(aiCacheRef.current).flatMap(e => e.libs))
+    );
+    const finalCode = allLibs.length > 0 ? prependImports(processedCode, allLibs) : processedCode;
 
-      try {
-        const response = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt,
-            context: {
-              fullCode: newCode, // Give AI the surrounding code for context
-            }
-          })
-        });
+    setCode(finalCode);
 
-        const data = await response.json();
-        if (data.code) {
-          if (data.injectedLibraries) {
-            setInjectedLibs(data.injectedLibraries);
-          }
-          // Replace the template marker with the actual generated AI code
-          let mergedCode = newCode.replace(
-            /\/\* ✨ AI Request: "[^"]+" \*\/\nconsole\.log\('✨ Magic Triggered for: "[^"]+"'\);\n/,
-            '\n' + data.code + '\n'
-          );
+    // Trigger AI generation for the first uncached prompt (avoid duplicate requests)
+    if (uncachedPrompts.length > 0 && !isGenerating) {
+      triggerAiGeneration(uncachedPrompts[0], rawCode);
+    }
+  };
 
-          if (data.injectedLibraries && data.injectedLibraries.length > 0) {
-            mergedCode = prependImports(mergedCode, data.injectedLibraries);
-          }
+  const triggerAiGeneration = async (prompt: string, fullRawCode: string) => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          context: { fullCode: fullRawCode }
+        })
+      });
 
-          setCode(mergedCode);
+      const data = await response.json();
+      if (data.code) {
+        // Clean up any accidental markdown fences from the LLM
+        const cleanCode = stripMarkdownFences(data.code);
+        const newLibs: string[] = data.injectedLibraries || [];
+        const newEntry: AiCacheEntry = { code: cleanCode, libs: newLibs };
+
+        // Update both the ref (for synchronous access) and state (for re-render)
+        aiCacheRef.current = { ...aiCacheRef.current, [prompt]: newEntry };
+        setAiCache(aiCacheRef.current);
+
+        if (newLibs.length > 0) {
+          setInjectedLibs(prev => Array.from(new Set([...prev, ...newLibs])));
         }
-      } catch (err) {
-        console.error("AI Generation failed:", err);
-      } finally {
-        setIsGenerating(false);
+
+        // Now apply the freshly populated cache to the original raw Blockly code
+        // so the marker gets replaced without waiting for the next Blockly event
+        const { processedCode } = applyCachedReplacements(fullRawCode, aiCacheRef.current);
+        const allLibs = Array.from(
+          new Set(Object.values(aiCacheRef.current).flatMap(e => e.libs))
+        );
+        const finalCode = allLibs.length > 0 ? prependImports(processedCode, allLibs) : processedCode;
+        setCode(finalCode);
       }
-    } else {
-      setCode(newCode); // Standard blocks update normally
+    } catch (err) {
+      console.error("AI Generation failed:", err);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
