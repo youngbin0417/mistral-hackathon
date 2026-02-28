@@ -22,11 +22,13 @@ Magic Request: "${prompt}"
 
 Generate vanilla JavaScript code that:
 1. Interprets the user's intent literally but intelligently.
-2. Acts on the browser DOM. You must create elements inside document.getElementById('app').
-3. For physics/gravity: Use Matter.js. Important: Always use Render.create({ element: document.getElementById('app'), engine, options: { width: window.innerWidth, height: window.innerHeight } }). Don't append to document.body.
-4. For drawing/animations: Use p5.js. Important: Use instance mode \`new p5(s => { ... }, document.getElementById('app'))\`.
-5. NEVER mix Matter.js and p5.js in the same code unless explicitly requested, as their renderers can conflict or hide each other. Pick the best ONE library for the job.
-6. Provide brief, kid-friendly comments explaining the "magic" in Korean.
+2. Acts on the browser DOM. Create elements or canvas inside \`document.getElementById('app')\`.
+3. You MUST CHOOSE EXACTLY ONE approach from below. DO NOT mix them:
+   - APPROACH A (Visuals/Drawing): Use ONLY 'p5.js' for particles, visuals, sparkles. Use instance mode \`new p5(s => { ... s.setup = () => { s.createCanvas(window.innerWidth, window.innerHeight).parent('app'); } }, document.getElementById('app'))\`.
+   - APPROACH B (Rigid Physics): Use ONLY 'Matter.js' for gravity blocks, bouncing. \`Render.create({ element: document.getElementById('app'), engine, options: { width: window.innerWidth, height: window.innerHeight } })\`.
+   - APPROACH C (DOM/Vanilla): Use vanilla JS to animate HTML elements.
+4. CRITICAL: NEVER import or use both Matter.js and p5.js together. It causes rendering collisions.
+5. Provide brief, kid-friendly comments explaining the "magic" in Korean.
 
 IMPORTANT RULES:
 - Return ONLY valid, executable JavaScript code.

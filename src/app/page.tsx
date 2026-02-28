@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { SandpackProvider, SandpackLayout, SandpackPreview } from "@codesandbox/sandpack-react";
-import { Code, X } from "lucide-react";
+import { SandpackProvider, SandpackLayout, SandpackPreview, SandpackCodeEditor } from "@codesandbox/sandpack-react";
+import { Play, Code, X } from "lucide-react";
 import dynamic from 'next/dynamic';
 
 const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), {
@@ -26,7 +26,7 @@ export default function Home() {
   const [code, setCode] = useState(`// Start dragging blocks!`);
   const [injectedLibs, setInjectedLibs] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const handleCodeChange = async (newCode: string) => {
     // Check if the generated code contains an AI request
@@ -105,25 +105,25 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Sandpack Area - Preview Only */}
+        {/* Code Area */}
         <div className="flex-1 flex flex-col bg-gray-900 border border-gray-800 rounded-lg overflow-hidden relative">
           <div className="p-2 border-b border-gray-800 bg-gray-900 flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-pink-500 ml-2">Live Preview</h2>
+            <h2 className="text-lg font-semibold text-cyan-400 ml-2">Generated Code</h2>
             <button
-              onClick={() => setIsCodeModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded-md transition-colors text-sm font-medium border border-gray-700"
+              onClick={() => setIsPreviewModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-md transition-colors text-sm font-bold border border-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.3)]"
             >
-              <Code size={16} />
-              View Code
+              <Play size={16} fill="currentColor" />
+              Run Magic
             </button>
           </div>
-          <div className="flex-1 overflow-hidden pointer-events-auto bg-black rounded-b-lg">
+          <div className="flex-1 w-full h-full relative pointer-events-auto bg-black rounded-b-lg overflow-hidden flex flex-col">
             <SandpackProvider
               template="vanilla"
               theme="dark"
               files={{
                 "/index.js": code,
-                "/index.html": `<!DOCTYPE html><html><head><style>body { margin: 0; padding: 0; background: #000; color: #fff; }</style></head><body><main id="app"></main><script src="index.js"></script></body></html>`
+                "/index.html": `<!DOCTYPE html><html><head><style>body, html { margin: 0; padding: 0; background: transparent; color: #fff; width: 100%; height: 100%; overflow: hidden; } #app { width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; } canvas { display: block; max-width: 100%; max-height: 100%; }</style></head><body><main id="app"></main><script src="index.js"></script></body></html>`
               }}
               customSetup={{
                 dependencies: {
@@ -132,51 +132,46 @@ export default function Home() {
                 }
               }}
             >
-              <SandpackLayout style={{ height: "100%", borderRadius: 0, border: 'none' }}>
-                <SandpackPreview
-                  showNavigator={false}
-                  showOpenInCodeSandbox={false}
-                  showRefreshButton={true}
-                  style={{ height: "100%", flex: 1 }}
+              <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', flex: 1, display: 'flex' }}>
+                <SandpackCodeEditor
+                  readOnly={true}
+                  showTabs={false}
+                  showLineNumbers={true}
+                  style={{ flex: 1, minHeight: "100%", minWidth: "100%", border: 'none' }}
                 />
               </SandpackLayout>
+
+              {/* Massive Preview Modal */}
+              {isPreviewModalOpen && (
+                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black bg-opacity-80 p-6 backdrop-blur-md">
+                  {/* Modal Header */}
+                  <div className="w-full max-w-6xl flex justify-between items-center p-4 bg-gray-900 border border-b-0 border-pink-500 rounded-t-xl shadow-[0_0_30px_rgba(236,72,153,0.3)] z-10">
+                    <h3 className="text-xl font-bold flex items-center gap-2 text-pink-400">
+                      <Play size={20} fill="currentColor" />
+                      Live Magic Preview
+                    </h3>
+                    <button
+                      onClick={() => setIsPreviewModalOpen(false)}
+                      className="text-gray-400 hover:text-white transition-colors bg-gray-800 hover:bg-gray-700 p-1.5 rounded-full"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                  {/* Modal Body */}
+                  <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-pink-500 rounded-b-xl overflow-hidden relative shadow-[0_0_50px_rgba(236,72,153,0.2)]">
+                    <SandpackPreview
+                      showNavigator={false}
+                      showOpenInCodeSandbox={false}
+                      showRefreshButton={true}
+                      style={{ width: "100%", height: "100%", minHeight: "100%", border: 'none' }}
+                    />
+                  </div>
+                </div>
+              )}
             </SandpackProvider>
           </div>
         </div>
       </div>
-
-      {/* Code Modal */}
-      {isCodeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 p-4 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-pink-500 rounded-xl w-full max-w-3xl flex flex-col shadow-[0_0_30px_rgba(236,72,153,0.3)]">
-            <div className="flex justify-between items-center p-4 border-b border-gray-800">
-              <h3 className="text-xl font-bold flex items-center gap-2 text-cyan-400">
-                <Code size={20} />
-                Generated JavaScript
-              </h3>
-              <button
-                onClick={() => setIsCodeModalOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] h-[60vh] overflow-y-auto">
-              <pre className="text-sm font-mono text-gray-300 whitespace-pre-wrap p-4 bg-black bg-opacity-50 border border-gray-700 rounded-lg shadow-inner">
-                <code>{code}</code>
-              </pre>
-            </div>
-            <div className="p-4 border-t border-gray-800 flex justify-end">
-              <button
-                onClick={() => setIsCodeModalOpen(false)}
-                className="px-6 py-2 bg-gradient-to-r from-pink-500 to-cyan-500 text-white font-bold rounded hover:opacity-90 transition-opacity"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
