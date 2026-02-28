@@ -1,52 +1,118 @@
 # Mistral Snap & Build 🚀
 
-Mistral Snap & Build는 아이들이 자연어로 코딩하고, Mistral AI(Codestral)가 이를 실시간으로 Javascript 코드로 변환해주는 AI 네이티브 블록 코딩 플랫폼입니다.
+**Mistral Snap & Build** is an AI-native block coding platform where kids can code using natural language, and Mistral AI (Codestral) transforms their prompts into real-time JavaScript code.
 
 ## 🌟 Key Features
-- **Magic Block**: 자연어 프롬프트를 입력하면 AI가 실시간으로 p5.js 또는 Matter.js 코드를 생성합니다.
-- **Self-Healing**: 런타임 에러가 발생하면 AI가 자동으로 원인을 파악하고 코드를 수정합니다.
-- **AI-Native Monitoring (Grafana/Loki)**: 모든 AI 생성 과정과 런타임 이벤트를 Grafana 대시보드에서 실시간으로 분석합니다.
-- **Community Magics (Redis)**: Redis 캐싱을 통해 AI 응답 속도를 높이고, 다른 사용자가 만든 코드를 실시간으로 공유합니다.
+
+- **✨ Magic Block**: Enter natural language prompts and watch AI generate p5.js or Matter.js code in real-time.
+- **🔧 Self-Healing**: When runtime errors occur, AI automatically detects the cause and fixes the code.
+- **📊 AI-Native Monitoring (Grafana/Loki)**: Analyze all AI generation processes and runtime events in real-time through Grafana dashboards.
+- **🚀 Community Magics (Redis)**: Redis caching accelerates AI response times and enables real-time sharing of user-created code.
 
 ## 🛠️ Getting Started
 
 ### 1. Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (모니터링 및 캐시 스택용)
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for monitoring and cache stack)
 - Node.js 18+
-- Mistral API Key (`.env` 파일에 설정)
+- Mistral API Key (configured in `.env` file)
 
 ### 2. Environment Setup
-`.env` 파일을 루트에 생성하고 아래 내용을 입력하세요:
+
+Create a `.env` file in the root directory and add the following:
+
 ```env
 MISTRAL_API_KEY=your_api_key_here
 ```
 
 ### 3. Running the Infrastructure (Redis, Grafana, Loki)
-애플리케이션의 풀 기능을 사용하려면 Docker를 통해 인프라를 먼저 실행해야 합니다:
+
+To use the full features of the application, start the infrastructure via Docker first:
+
 ```bash
 cd observability
 docker compose up -d
 ```
-- **Grafana**: `http://localhost:3000` (ID: admin / PW: admin)
-- **Loki**: 로그 수집기 (Promtail 연동)
-- **Redis**: 캐시 및 최근 기록 저장소 (`localhost:6379`)
+
+**Services:**
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Grafana | `http://localhost:3000` | admin / admin |
+| Loki | - | Log collector (Promtail integration) |
+| Redis | `localhost:6379` | Cache & recent history storage |
 
 ### 4. Running the Development Server
+
 ```bash
 npm install
 npm run dev
 ```
+
 Open [http://localhost:3000](http://localhost:3000) to start coding!
 
 ## 🧪 Testing
+
 ```bash
-npm test          # 단위 및 통합 테스트 실행
-npm run test:watch # 라이브 테스트 모드
+npm test          # Run unit and integration tests
+npm run test:watch # Live test mode
 ```
-현재 코드 변환 로직(codeTransform)에 대한 100% 테스트 커버리지를 유지하고 있습니다.
+
+The project maintains 100% test coverage for core code transformation logic (`codeTransform`).
 
 ## 📂 Project Structure
-- `/src/app/api`: AI 생성, 수정, 최근 기록 API
-- `/src/lib`: AI 마커 파싱, import 주입 등 핵심 로직 (테스트 완료)
-- `/observability`: Grafana, Loki, Promtail, Redis 설정 파일
-- `/logs`: 애플리케이션 구조화된 로그(JSON) 저장소
+
+```
+hack/
+├── src/
+│   ├── app/api/       # AI generation, modification, and recent history APIs
+│   └── lib/           # Core logic (AI marker parsing, import injection) - fully tested
+├── observability/     # Grafana, Loki, Promtail, Redis configuration files
+├── logs/              # Structured application logs (JSON format)
+└── __tests__/         # Test suites
+```
+
+## 🏗️ Architecture
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Frontend  │────▶│  Next.js API │────▶│ Mistral AI  │
+│  (Blocks)   │◀────│   Handlers   │◀────│  (Codestral)│
+└─────────────┘     └──────────────┘     └─────────────┘
+       │                    │                    │
+       ▼                    ▼                    ▼
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Grafana   │◀────│    Loki      │     │   Redis     │
+│ Dashboard   │     │   (Logs)     │     │   (Cache)   │
+└─────────────┘     └──────────────┘     └─────────────┘
+```
+
+## 📋 Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| **Frontend** | Next.js 15, React, TypeScript, Tailwind CSS |
+| **AI** | Mistral AI (Codestral) |
+| **Monitoring** | Grafana, Loki, Promtail |
+| **Caching** | Redis |
+| **Testing** | Jest, React Testing Library |
+| **Code Generation** | p5.js, Matter.js |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Support
+
+For issues and questions, please open an issue on the [GitHub Issues](https://github.com/your-org/hack/issues) page.
+
+---
+
+**Built with ❤️ for young coders everywhere**
