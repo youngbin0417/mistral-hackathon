@@ -164,6 +164,18 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
       },
     });
 
+    // --- Definitive hammer to hide the redundant vertical categorical legend ---
+    const hideToolbox = () => {
+      const toolbox = document.querySelector('.blocklyToolbox') as HTMLElement | null;
+      if (toolbox) {
+        toolbox.style.display = 'none';
+        toolbox.style.visibility = 'hidden';
+        toolbox.style.width = '0';
+      }
+    };
+    setTimeout(hideToolbox, 100);
+    setTimeout(hideToolbox, 500); // Just in case it's lazy-loaded
+
     const handleResize = () => {
       if (workspaceRef.current) {
         Blockly.svgResize(workspaceRef.current);
@@ -196,44 +208,9 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
     const initialCode = javascriptGenerator.workspaceToCode(workspaceRef.current);
     onCodeChangeRef.current(initialCode);
 
-    // ── Click-listener: sync left toolbox → top buttons ───────────────────
-    // aria-selected stays "false" in this Blockly version, so API/MutationObserver
-    // are both useless. Instead we traverse the click target up to the category
-    // container and read the label text directly — version-agnostic and reliable.
-    let toolboxClickCleanup: (() => void) | null = null;
-    const attachToolboxClickListener = () => {
-      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolbox') as HTMLElement | null
-        ?? document.querySelector('.blocklyToolbox') as HTMLElement | null;
-      if (!toolboxDiv) return;
-
-      const handleToolboxClick = (e: Event) => {
-        const target = e.target as HTMLElement;
-        // Walk up from the click target to find the category container
-        const container =
-          target.closest<HTMLElement>('.blocklyToolboxCategoryContainer') ??
-          target.closest<HTMLElement>('.blocklyToolboxCategory');
-        if (!container) return;
-
-        const label =
-          container.querySelector('.blocklyToolboxCategoryLabel')?.textContent?.trim() ?? '';
-        if (!label) return;
-
-        const matched = CATEGORIES.find(
-          c => c.label.toLowerCase() === label.toLowerCase()
-        );
-        setActiveCategory(matched ? matched.id : null);
-      };
-
-      toolboxDiv.addEventListener('click', handleToolboxClick);
-      toolboxClickCleanup = () => toolboxDiv.removeEventListener('click', handleToolboxClick);
-    };
-    // Toolbox DOM is injected asynchronously; wait a tick before attaching.
-    setTimeout(attachToolboxClickListener, 300);
-
     return () => {
       window.removeEventListener('resize', handleResize);
       resizeObserver.disconnect();
-      toolboxClickCleanup?.();
       if (workspaceRef.current) {
         workspaceRef.current.dispose();
         workspaceRef.current = null;
@@ -291,6 +268,21 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
           border: none !important;
           stroke: none !important;
           outline: none !important;
+        }
+
+        /* --- Toolbox: FULLY HIDDEN (replaced by custom React palette bar) --- */
+        .blocklyToolboxDiv,
+        .blocklyToolbox,
+        .blocklyToolboxContents,
+        .blocklyTreeRoot,
+        .blocklyTreeRow,
+        .blocklyToolboxCategory,
+        .blocklyToolboxCategoryContainer {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            pointer-events: none !important;
         }
 
         /* Prevent auto-added border for generating state if it's annoying */

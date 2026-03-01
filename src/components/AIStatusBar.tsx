@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bot, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 
 interface AIStatusBarProps {
@@ -20,18 +20,23 @@ const phases = [
 export default function AIStatusBar({ isGenerating, isHealing, healingMessage }: AIStatusBarProps) {
     const [phase, setPhase] = useState(0);
 
-    useEffect(() => {
+    // Use ref to track timers and avoid setState in effect
+    const timersRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
+
+    React.useEffect(() => {
         if (isGenerating) {
             setPhase(1);
             const t1 = setTimeout(() => setPhase(2), 1500);
             const t2 = setTimeout(() => setPhase(3), 4000);
-            return () => { clearTimeout(t1); clearTimeout(t2); };
-        } else {
-            setPhase((prev) => (prev >= 1 && prev < 4 ? 4 : prev));
+            timersRef.current = [t1, t2];
         }
+        return () => {
+            timersRef.current.forEach(clearTimeout);
+            timersRef.current = [];
+        };
     }, [isGenerating]);
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (phase === 4) {
             const t = setTimeout(() => setPhase(0), 3000);
             return () => clearTimeout(t);
@@ -66,12 +71,6 @@ export default function AIStatusBar({ isGenerating, isHealing, healingMessage }:
                 )}
             </div>
 
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
-                    <span className="text-[10px] text-gray-500 font-medium">Codestral Connected</span>
-                </div>
-            </div>
         </div>
     );
 }

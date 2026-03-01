@@ -63,6 +63,16 @@ export default function Home() {
   const { code, setCode, codeRef, injectedLibs, isGenerating, handleCodeChange } = useAiGeneration(`// Start dragging blocks!`);
   const { isHealing, healingMessage, lastError, handleHeal } = useSelfHealer(codeRef, setCode);
 
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data && event.data.type === 'error' && event.data.message && !isHealing && event.data.message !== lastError) {
+        handleHeal(event.data.message);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [handleHeal]);
+
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const previewLoadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
