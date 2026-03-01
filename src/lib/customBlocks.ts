@@ -354,7 +354,7 @@ function registerGenerators() {
     javascriptGenerator.forBlock['magic_block'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        const code = `\n/* ✨ AI Request: "${prompt}" */\n{ console.log('AI_MAGIC_TRIGGER: ${escapedPrompt}'); }\n`;
+        const code = `\n/* ✨ AI Request: "${escapedPrompt}" */\n{ console.log('AI_MAGIC_TRIGGER: ${escapedPrompt}'); }\n`;
         const svgBlock = block as Blockly.BlockSvg;
         if (typeof svgBlock.getSvgRoot === 'function' && svgBlock.getSvgRoot()) {
             svgBlock.getSvgRoot().classList.add('magic-block-glow');
@@ -370,14 +370,15 @@ function registerGenerators() {
     javascriptGenerator.forBlock['magic_styles'] = function (block: Blockly.Block) {
         const target = block.getFieldValue('TARGET');
         const prompt = block.getFieldValue('PROMPT');
-        const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        return `\n/* ✨ AI Request: Style ${target} like ${prompt} */\n{ console.log('AI_MAGIC_STYLE: ${target} -> ${escapedPrompt}'); }\n`;
+        const fullPrompt = `Style ${target} like ${prompt}`;
+        const escapedFullPrompt = fullPrompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        return `\n/* ✨ AI Request: "${escapedFullPrompt}" */\n{ console.log('AI_MAGIC_STYLE: ${escapedFullPrompt}'); }\n`;
     };
 
     javascriptGenerator.forBlock['remix_code_block'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        const code = `\n/* ✨ AI Request: REMIX CODE - "${escapedPrompt}" */\n{ console.log('AI_MAGIC_REMIX: ${escapedPrompt}'); }\n`;
+        const code = `\n/* ✨ AI Request: "${escapedPrompt}" */\n{ console.log('AI_MAGIC_REMIX: ${escapedPrompt}'); }\n`;
         const svgBlock = block as Blockly.BlockSvg;
         if (typeof svgBlock.getSvgRoot === 'function' && svgBlock.getSvgRoot()) {
             svgBlock.getSvgRoot().classList.add('magic-block-glow');
@@ -388,7 +389,7 @@ function registerGenerators() {
     javascriptGenerator.forBlock['add_feature_block'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
-        const code = `\n/* ✨ AI Request: ADD FEATURE - "${escapedPrompt}" */\n{ console.log('AI_MAGIC_ADD: ${escapedPrompt}'); }\n`;
+        const code = `\n/* ✨ AI Request: "${escapedPrompt}" */\n{ console.log('AI_MAGIC_ADD: ${escapedPrompt}'); }\n`;
         const svgBlock = block as Blockly.BlockSvg;
         if (typeof svgBlock.getSvgRoot === 'function' && svgBlock.getSvgRoot()) {
             svgBlock.getSvgRoot().classList.add('magic-block-glow');

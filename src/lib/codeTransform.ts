@@ -20,7 +20,7 @@ export interface AiCacheEntry {
  * This regex accounts for that by allowing optional whitespace before the comment and the console.log line.
  */
 export const AI_MARKER_REGEX =
-    /\n?[ \t]*\/\* ✨ AI Request: "([\s\S]+?)" \*\/\n[ \t]*\{ console\.log\('AI_MAGIC_TRIGGER: [\s\S]+?'\); \}\n?/g;
+    /\n?[ \t]*\/\* ✨ AI Request: "([\s\S]+?)" \*\/\n[ \t]*\{ console\.log\('AI_MAGIC_[A-Z_]+: [\s\S]+?'\); \}\n?/g;
 
 /**
  * Extract all AI Magic Block prompts from raw Blockly-generated code.
