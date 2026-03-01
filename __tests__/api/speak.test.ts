@@ -30,7 +30,7 @@ describe('/api/speak API Route', () => {
         expect(data.error).toBe('Text is required');
     });
 
-    it('returns 500 if API key is missing', async () => {
+    it('returns 200 with mock buffer if API key is missing', async () => {
         delete process.env.ELEVENLABS_API_KEY;
         const req = new Request('http://localhost', {
             method: 'POST',
@@ -38,9 +38,9 @@ describe('/api/speak API Route', () => {
         });
 
         const response = await POST(req);
-        expect(response.status).toBe(500);
-        const data = await response.json();
-        expect(data.error).toBe('ElevenLabs API key is missing');
+        expect(response.status).toBe(200);
+        const data = await response.arrayBuffer();
+        expect(data.byteLength).toBe(1);
     });
 
     it('returns audio buffer successfully', async () => {
