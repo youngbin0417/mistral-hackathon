@@ -39,7 +39,7 @@ The user is learning to code using a visual block editor.
 
 YOUR TASK:
 Explain this code to a 10-year-old in 2 or 3 short sentences. What does it do?
-Respond in Korean (한국어로 답변하세요).
+Respond in English.
 Do NOT include any code blocks, markdown formatting, or complex terms. Keep it very simple and friendly.`;
 
         const chatResponse = await client.chat.complete({
@@ -50,7 +50,7 @@ Do NOT include any code blocks, markdown formatting, or complex terms. Keep it v
             ]
         });
 
-        const explanation = chatResponse.choices?.[0]?.message?.content || "설명을 생성하지 못했어요.";
+        const explanation = chatResponse.choices?.[0]?.message?.content || "Failed to generate an explanation.";
 
         return NextResponse.json({ explanation });
     } catch (error: unknown) {

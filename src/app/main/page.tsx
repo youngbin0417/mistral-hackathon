@@ -157,7 +157,7 @@ export default function Home() {
     };
 
     return (
-        <div className="flex flex-col h-[100dvh] bg-[var(--background)] text-[var(--foreground)] overflow-hidden">
+        <div className="flex flex-col h-[100dvh] bg-[var(--background)] text-[var(--foreground)] overflow-hidden app-fixed-height">
             <Toaster position="bottom-right" reverseOrder={false} toastOptions={{
                 style: { background: 'var(--card)', color: 'var(--foreground)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'Fredoka, sans-serif' }
             }} />

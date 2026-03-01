@@ -31,10 +31,13 @@ body,
 html {
     margin: 0;
     padding: 0;
+    min-height: 100vh;
     background: var(--background);
     color: var(--foreground);
     font-family: 'Fredoka', sans-serif;
-    overflow: hidden;
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    /* Removed overflow: hidden to allow scrolling on the landing page */
 }
 
 code,
@@ -289,6 +292,49 @@ pre,
     animation: scanline 2.5s linear infinite;
 }
 
+/* --- Premium Landing Page Animations --- */
+@keyframes float-gentle {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.animate-float-slow {
+    animation: float-gentle 8s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+.text-shadow-bolt {
+    text-shadow: 0 0 40px rgba(0, 229, 255, 0.5);
+}
+
+/* --- Layout Utility for Editor --- */
+.app-fixed-height {
+    height: 100vh;
+    overflow: hidden;
+}
+
 /* --- Magic Pulse Animation --- */
 @keyframes magic-pulse {
 
@@ -306,52 +352,12 @@ pre,
     animation: magic-pulse 2s ease-in-out infinite;
 }
 
-/* --- Float Animation --- */
-@keyframes float {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-6px);
-    }
-}
-
-.animate-float {
-    animation: float 3s ease-in-out infinite;
-}
-
 /* --- Glassmorphism --- */
 .glass {
     background: rgba(13, 13, 20, 0.7) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: none !important;
-}
-
-/* --- AI Generation BG Pulse --- */
-.blockly-generating {
-    position: relative;
-}
-
-.blockly-generating::after {
-    display: none !important;
-}
-
-@keyframes border-glow {
-
-    0%,
-    100% {
-        border-color: rgba(255, 0, 200, 0.3);
-        box-shadow: inset 0 0 20px rgba(255, 0, 200, 0.05);
-    }
-
-    50% {
-        border-color: rgba(255, 0, 200, 0.6);
-        box-shadow: inset 0 0 40px rgba(255, 0, 200, 0.1);
-    }
 }
 
 /* --- Custom Scrollbar --- */
@@ -373,7 +379,7 @@ pre,
     background: rgba(0, 229, 255, 0.4);
 }
 
-/* --- Blockly Marker/Cursor Hide --- */
+/* --- Hide Blockly Markers --- */
 .blocklyCursor,
 .blocklyMarker {
     display: none !important;
