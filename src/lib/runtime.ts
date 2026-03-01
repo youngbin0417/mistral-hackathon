@@ -25,7 +25,7 @@ export const RUNTIME_CODE = `
 
     window.playSFX = async (prompt) => {
         try {
-            const res = await fetch('/api/sfx', {
+            const res = await fetch('/api/main/sfx', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: prompt, duration_seconds: 1, isBGM: false })
@@ -61,7 +61,7 @@ export const RUNTIME_CODE = `
             if (style === 'alien') voiceId = 'yoZ06aMxZJJ28mfd3POQ';
             
             try {
-                const res = await fetch('/api/speak', {
+                const res = await fetch('/api/main/speak', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text, voiceId })

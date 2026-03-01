@@ -35,7 +35,7 @@ export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: 
         setHealingMessage("AI is analyzing the bug... 🧐");
 
         try {
-            const response = await fetch('/api/heal', {
+            const response = await fetch('/api/main/heal', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ error: errorMessage, code: codeRef.current })
@@ -52,7 +52,7 @@ export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: 
 
                 // Play Explanation Audio via ElevenLabs immediately!
                 try {
-                    const res = await fetch('/api/speak', {
+                    const res = await fetch('/api/main/speak', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ text: expMsg, voiceId: 'EXAVITQu4vr4xnSDxMaL' })

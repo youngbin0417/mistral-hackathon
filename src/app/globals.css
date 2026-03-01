@@ -148,11 +148,11 @@ pre,
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) !important;
 }
 
-/* Magic blocks get extra special glow */
-.blocklyDraggable .blocklyPath[fill="#B39DDB"],
-.blocklyDraggable .blocklyPath[fill="#F48FB1"],
-.blocklyDraggable .blocklyPath[fill="#CE93D8"] {
-    filter: drop-shadow(0 4px 12px rgba(188, 153, 225, 0.4)) !important;
+/* Magic blocks get standard treatment */
+.blocklyDraggable .blocklyPath[fill="#5E35B1"],
+.blocklyDraggable .blocklyPath[fill="#D81B60"],
+.blocklyDraggable .blocklyPath[fill="#8E24AA"] {
+    filter: none !important;
 }
 
 /* --- Field Inputs inside blocks --- */
@@ -176,13 +176,13 @@ pre,
     font-family: 'Fredoka', sans-serif !important;
     font-weight: 500 !important;
     font-size: 13px !important;
-    fill: #ffffff !important;
+    fill: #e0e4ef !important;
 }
 
 .blocklyDropdownText {
     font-family: 'Fredoka', sans-serif !important;
     font-weight: 500 !important;
-    fill: #ffffff !important;
+    fill: #e0e4ef !important;
 }
 
 /* Field input hover */

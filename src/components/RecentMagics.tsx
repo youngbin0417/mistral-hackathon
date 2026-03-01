@@ -13,7 +13,7 @@ export default function RecentMagics() {
     useEffect(() => {
         const fetchRecent = async () => {
             try {
-                const res = await fetch('/api/recent');
+                const res = await fetch('/api/main/recent');
                 const data = await res.json();
                 if (data.recent) setRecent(data.recent);
             } catch (e) {

@@ -11,7 +11,7 @@ export function initializeCustomBlocks() {
                 "args0": [{ "type": "field_input", "name": "PROMPT", "text": "make it sparkle" }],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#B39DDB",
+                "colour": "#5E35B1",
                 "tooltip": "Describe what you want in natural language"
             });
         }
@@ -24,7 +24,7 @@ export function initializeCustomBlocks() {
                 "message0": "✨ If: %1",
                 "args0": [{ "type": "field_input", "name": "PROMPT", "text": "player is near enemy" }],
                 "output": "Boolean",
-                "colour": "#B39DDB",
+                "colour": "#5E35B1",
                 "tooltip": "AI evaluates this condition"
             });
         }
@@ -40,7 +40,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#B39DDB"
+                "colour": "#5E35B1"
             });
         }
     };
@@ -53,7 +53,7 @@ export function initializeCustomBlocks() {
                 "args0": [{ "type": "field_input", "name": "PROMPT", "text": "make it faster" }],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F48FB1",
+                "colour": "#D81B60",
                 "tooltip": "Refactor/optimize code using Codestral"
             });
         }
@@ -66,7 +66,7 @@ export function initializeCustomBlocks() {
                 "args0": [{ "type": "field_input", "name": "PROMPT", "text": "add a power-up" }],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F48FB1",
+                "colour": "#D81B60",
                 "tooltip": "Integrate a new logic logic into the game"
             });
         }
@@ -88,7 +88,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#64B5F6"
+                "colour": "#1E88E5"
             });
         }
     };
@@ -104,7 +104,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F06292"
+                "colour": "#C2185B"
             });
         }
     };
@@ -120,7 +120,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#64B5F6"
+                "colour": "#1E88E5"
             });
         }
     };
@@ -135,7 +135,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#64B5F6"
+                "colour": "#1E88E5"
             });
         }
     };
@@ -147,7 +147,7 @@ export function initializeCustomBlocks() {
                 "args0": [{ "type": "field_number", "name": "VALUE", "value": 1 }],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#9575CD"
+                "colour": "#6A1B9A"
             });
         }
     };
@@ -163,7 +163,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#9575CD"
+                "colour": "#6A1B9A"
             });
         }
     };
@@ -179,7 +179,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#4DD0E1"
+                "colour": "#00838F"
             });
         }
     };
@@ -195,7 +195,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F06292",
+                "colour": "#C2185B",
                 "tooltip": "ElevenLabs TTS"
             });
         }
@@ -220,7 +220,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F06292"
+                "colour": "#C2185B"
             });
         }
     };
@@ -237,7 +237,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F06292"
+                "colour": "#C2185B"
             });
         }
     };
@@ -260,7 +260,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F06292"
+                "colour": "#C2185B"
             });
         }
     };
@@ -276,7 +276,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F57C00"
+                "colour": "#BF360C"
             });
         }
     };
@@ -289,7 +289,7 @@ export function initializeCustomBlocks() {
                 "args0": [{ "type": "field_number", "name": "AMOUNT", "value": 10 }],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#4FC3F7"
+                "colour": "#0277BD"
             });
         }
     };
@@ -302,7 +302,7 @@ export function initializeCustomBlocks() {
                     { "type": "field_number", "name": "SECONDS", "value": 1 },
                     { "type": "input_statement", "name": "STACK" }
                 ],
-                "colour": "#F57C00"
+                "colour": "#BF360C"
             });
         }
     };
@@ -312,7 +312,7 @@ export function initializeCustomBlocks() {
             this.jsonInit({
                 "message0": "When Clicked %1",
                 "args0": [{ "type": "input_statement", "name": "STACK" }],
-                "colour": "#F57C00"
+                "colour": "#BF360C"
             });
         }
     };
@@ -322,7 +322,7 @@ export function initializeCustomBlocks() {
             this.jsonInit({
                 "message0": "Always (Every Frame) %1",
                 "args0": [{ "type": "input_statement", "name": "STACK" }],
-                "colour": "#F57C00"
+                "colour": "#BF360C"
             });
         }
     };
@@ -346,7 +346,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#CE93D8",
+                "colour": "#8E24AA",
                 "tooltip": "Plays AI generated background music"
             });
         }
@@ -361,7 +361,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#F57C00"
+                "colour": "#BF360C"
             });
         }
     };
@@ -374,7 +374,7 @@ export function initializeCustomBlocks() {
                 "args0": [{ "type": "input_value", "name": "TEXT" }],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#81C784"
+                "colour": "#5E35B1"
             })
         }
     }

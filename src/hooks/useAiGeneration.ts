@@ -21,7 +21,7 @@ export function useAiGeneration(initialCode: string) {
     const triggerAiGeneration = async (prompt: string, fullRawCode: string) => {
         setIsGenerating(true);
         try {
-            const response = await fetch('/api/generate', {
+            const response = await fetch('/api/main/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt, context: { fullCode: fullRawCode } })

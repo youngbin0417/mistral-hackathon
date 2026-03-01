@@ -1,418 +1,198 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { SandpackProvider, SandpackLayout, SandpackCodeEditor } from "@codesandbox/sandpack-react";
-import { Play, X, Sparkles, AlertCircle, Blocks, Copy, Check, MessageCircleQuestion } from "lucide-react";
-import dynamic from 'next/dynamic';
-import { Panel, Group, Separator } from 'react-resizable-panels';
-import toast, { Toaster } from 'react-hot-toast';
+import React from 'react';
+import Link from 'next/link';
+import {
+  Sparkles,
+  Mic,
+  Music,
+  MessageCircleQuestion,
+  Zap,
+  Code2,
+  Rocket,
+  ChevronRight,
+  MonitorPlay,
+  Brain
+} from 'lucide-react';
 
-import ApiSetupModal from '@/components/ApiSetupModal';
-import TopNavigation from '@/components/TopNavigation';
-import AIStatusBar from '@/components/AIStatusBar';
-import SelfHealer from '@/components/SelfHealer';
-import { useAiGeneration } from '@/hooks/useAiGeneration';
-import { useSelfHealer } from '@/hooks/useSelfHealer';
-import { SANDPACK_LIBRARIES } from '@/config/constants';
-import { RUNTIME_CODE } from '@/lib/runtime';
-
-class SandpackErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(error: Error) {
-    console.error("Sandpack crashed:", error);
-  }
-  render() {
-    if (this.state.hasError) {
-      return <div className="p-4 text-[var(--neon-pink)] bg-black/50 border border-[var(--neon-pink)] rounded-xl m-4">Sandpack preview crashed. Please reload the page or reset the app.</div>;
-    }
-    return this.props.children;
-  }
-}
-
-const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), {
-  ssr: false,
-  loading: () => <div className="absolute inset-0 flex items-center justify-center text-gray-600 font-medium">Loading Blockly...</div>
-});
-
-export default function Home() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [needsApiKey, setNeedsApiKey] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState("");
-
-  useEffect(() => {
-    fetch('/api/config')
-      .then(res => res.json())
-      .then(data => {
-        if (data.hasApiKey === false) {
-          setNeedsApiKey(true);
-        }
-      })
-      .catch(err => console.error("Failed to check API Key", err));
-
-    const handleResize = () => setIsMobile(window.innerWidth < 1024);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const handleSaveApiKey = async () => {
-    try {
-      const res = await fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: apiKeyInput })
-      });
-      if (res.ok) {
-        setNeedsApiKey(false);
-        toast.success("API Key saved! Ready to use.");
-      } else {
-        toast.error("Failed to save API key.");
-      }
-    } catch {
-      toast.error("Error saving API key.");
-    }
-  };
-
-  const { code, setCode, codeRef, injectedLibs, isGenerating, handleCodeChange } = useAiGeneration(`// Start dragging blocks!`);
-  const { isHealing, healingMessage, lastError, handleHeal } = useSelfHealer(codeRef, setCode);
-
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'error' && event.data.message && !isHealing && event.data.message !== lastError) {
-        handleHeal(event.data.message);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [handleHeal, isHealing, lastError]);
-
-  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
-  const previewLoadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const openPreview = () => {
-    setIsPreviewLoading(true);
-    setIsPreviewModalOpen(true);
-    // Always show loader for at least 800ms, then hide it
-    if (previewLoadTimerRef.current) clearTimeout(previewLoadTimerRef.current);
-    previewLoadTimerRef.current = setTimeout(() => {
-      setIsPreviewLoading(false);
-      previewLoadTimerRef.current = null;
-    }, 800);
-  };
-
-  const handleIframeLoad = () => {
-    // If the 800ms timer already expired, nothing to do (loader already hidden)
-    // If it's still pending, clear it and hide immediately — iframe is ready
-    if (previewLoadTimerRef.current) {
-      clearTimeout(previewLoadTimerRef.current);
-      previewLoadTimerRef.current = null;
-      setIsPreviewLoading(false);
-    }
-  };
-
-  const hasCode = code.trim().length > 0;
-
-  const [isCopied, setIsCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code).then(() => {
-      setIsCopied(true);
-      toast.success('Code copied!');
-      setTimeout(() => setIsCopied(false), 2000);
-    });
-  };
-
-  const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
-  const [isExplaining, setIsExplaining] = useState(false);
-  const [explanation, setExplanation] = useState("");
-
-  const handleExplain = async () => {
-    if (!code.trim()) return;
-    setIsExplainModalOpen(true);
-    setIsExplaining(true);
-    setExplanation("");
-    try {
-      const res = await fetch('/api/explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setExplanation(data.explanation);
-      } else {
-        setExplanation(data.error || "Failed to explain.");
-      }
-    } catch {
-      setExplanation("Network error occurred.");
-    } finally {
-      setIsExplaining(false);
-    }
-  };
-
+export default function IntroPage() {
   return (
-    <div className="flex flex-col h-[100dvh] bg-[var(--background)] text-[var(--foreground)] overflow-hidden">
-      <Toaster position="bottom-right" reverseOrder={false} toastOptions={{
-        style: { background: 'var(--card)', color: 'var(--foreground)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'Fredoka, sans-serif' }
-      }} />
-
-      <ApiSetupModal
-        needsApiKey={needsApiKey}
-        apiKeyInput={apiKeyInput}
-        setApiKeyInput={setApiKeyInput}
-        handleSaveApiKey={handleSaveApiKey}
-      />
-
-      <TopNavigation injectedLibs={injectedLibs} isGenerating={isGenerating} />
-
-      {/* Healing Notification Overlay */}
-      {healingMessage && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] animate-bounce">
-          <div className="bg-gradient-to-r from-[var(--neon-pink)] to-[var(--neon-purple)] text-white px-6 py-3 rounded-2xl glow-pink flex items-center gap-3">
-            <Sparkles className="animate-spin" size={20} />
-            <span className="font-bold">{healingMessage}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Main Layout with Resizable Panels */}
-      <div className="flex-1 min-h-0">
-        <Group orientation={isMobile ? "vertical" : "horizontal"}>
-          {/* Blockly Area */}
-          <Panel defaultSize={42} minSize={30} className="flex flex-col">
-            <BlocklyWorkspace onCodeChange={handleCodeChange} isGenerating={isGenerating} />
-          </Panel>
-
-          <Separator className="w-1.5 hover:bg-[var(--neon-cyan)]/20 transition-colors flex items-center justify-center group">
-            <div className="h-12 w-0.5 bg-gray-800/30 group-hover:bg-[var(--neon-cyan)] rounded-full transition-colors" />
-          </Separator>
-
-          {/* Code Area */}
-          <Panel defaultSize={58} minSize={30} className="flex flex-col">
-            <div className="h-full flex flex-col">
-              {/* Code Header */}
-              <div className="flex items-center justify-between px-4 py-3 bg-[var(--card)]/50 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
-                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Live Engine Code</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => openPreview()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--neon-cyan)] to-[var(--neon-purple)] text-[var(--background)] text-sm font-bold glow-cyan hover:opacity-90 transition-opacity active:scale-95"
-                  >
-                    <Play size={14} fill="currentColor" />
-                    Run Magic
-                  </button>
-                  {/* Explain button */}
-                  <button
-                    onClick={handleExplain}
-                    title="Explain This Code"
-                    className="p-1.5 rounded-lg hover:bg-[var(--neon-pink)]/10 text-[var(--neon-pink)] transition-colors hover:shadow-[0_0_10px_rgba(255,0,200,0.2)]"
-                  >
-                    <MessageCircleQuestion className="w-4 h-4" />
-                  </button>
-                  {/* Copy button */}
-                  <button
-                    onClick={handleCopy}
-                    title="Copy code"
-                    className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
-                  >
-                    {isCopied
-                      ? <Check className="w-3.5 h-3.5 text-[var(--neon-green)]" />
-                      : <Copy className="w-3.5 h-3.5 text-gray-500" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Code Body */}
-              <div className="flex-1 relative overflow-hidden bg-[var(--background)]">
-                <SandpackErrorBoundary>
-                  <SandpackProvider
-                    template="vanilla"
-                    theme="dark"
-                    files={{
-                      "/index.js": `console.log("index.js started");\n` + code,
-                      "/index.html": `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body, html { margin: 0; padding: 0; background: #0a0a0f; color: #fff; width: 100%; height: 100%; overflow: hidden; }
-    #app { width: 100%; height: 100%; position: relative; }
-    canvas { pointer-events: none; }
-  </style>
-</head>
-<body>
-  <div id="app"></div>
-  <script>
-    ${RUNTIME_CODE}
-  </script>
-  <script src="index.js"></script>
-</body>
-</html>`
-                    }}
-                    customSetup={{
-                      dependencies: SANDPACK_LIBRARIES
-                    }}
-                  >
-                    <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', display: 'flex', flexDirection: 'column' }}>
-                      <SandpackCodeEditor
-                        readOnly={true}
-                        showTabs={false}
-                        showLineNumbers={true}
-                        style={{ flex: 1, height: "100%", border: 'none', overflow: 'auto' }}
-                      />
-                    </SandpackLayout>
-
-                    <SelfHealer isHealing={isHealing} lastError={lastError} handleHeal={handleHeal} />
-
-                  </SandpackProvider>
-                </SandpackErrorBoundary>
-              </div>
-            </div>
-          </Panel>
-        </Group>
+    <div className="min-h-screen bg-[#050508] text-white overflow-x-hidden selection:bg-[var(--neon-pink)] selection:text-white">
+      {/* Animated Background Gradients */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[var(--neon-purple)]/20 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[var(--neon-cyan)]/10 blur-[120px] rounded-full animate-pulse delay-1000" />
       </div>
 
-      {/* AI Status Bar (Bottom) */}
-      <AIStatusBar isGenerating={isGenerating} isHealing={isHealing} healingMessage={healingMessage} />
-
-      {/* Explain Code Modal */}
-      {isExplainModalOpen && (
-        <div className="fixed inset-0 z-[300] flex justify-center items-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-[var(--card)] w-full max-w-lg rounded-2xl border border-[var(--border)] shadow-2xl flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b border-[var(--border)]">
-              <h2 className="text-lg font-bold flex items-center gap-2 text-[var(--neon-pink)]">
-                <MessageCircleQuestion className="w-5 h-5" />
-                Explain This Code
-              </h2>
-              <button onClick={() => setIsExplainModalOpen(false)} className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="bg-black/50 p-4 rounded-xl border border-[var(--border)] text-sm font-mono text-gray-300 overflow-y-auto max-h-32 mb-4">
-                <pre>{code.split('\n').slice(0, 10).join('\n')}{code.split('\n').length > 10 ? '\n...' : ''}</pre>
-              </div>
-              <div className="min-h-[80px] flex items-center justify-center">
-                {isExplaining ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <Sparkles className="w-6 h-6 text-[var(--neon-pink)] animate-spin" />
-                    <p className="text-sm text-gray-400">Analyzing code...</p>
-                  </div>
-                ) : (
-                  <p className="text-base leading-relaxed text-gray-200">{explanation}</p>
-                )}
-              </div>
-            </div>
-            <div className="p-4 border-t border-[var(--border)] flex justify-end">
-              <button
-                onClick={() => setIsExplainModalOpen(false)}
-                className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors"
-              >
-                Got it!
-              </button>
-            </div>
+      {/* Hero Section */}
+      <nav className="relative z-10 flex items-center justify-between p-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 group cursor-default">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--neon-pink)] to-[var(--neon-purple)] flex items-center justify-center glow-pink group-hover:scale-110 transition-transform duration-300">
+            <Rocket className="w-6 h-6 text-white" />
           </div>
+          <span className="text-xl font-bold tracking-tight">Snap & Build</span>
         </div>
-      )}
+        <Link
+          href="/main"
+          className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--neon-cyan)] hover:bg-[var(--neon-cyan)]/10 transition-all font-medium text-sm flex items-center gap-2"
+        >
+          Open App <ChevronRight size={16} />
+        </Link>
+      </nav>
 
-      {/* Massive Preview Modal */}
-      {isPreviewModalOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 p-6 backdrop-blur-md">
-          {/* Modal Header */}
-          <div className="w-full max-w-6xl flex justify-between items-center p-4 bg-[var(--card)] border border-b-0 border-[var(--neon-cyan)]/30 rounded-t-2xl backdrop-blur-md">
-            <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--neon-cyan)] text-glow-cyan">
-              <Play size={18} fill="currentColor" />
-              Live Magic Preview
-            </h3>
-            <button
-              onClick={() => setIsPreviewModalOpen(false)}
-              className="text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-xl"
+      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-40">
+        <div className="text-center mb-32">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold tracking-widest uppercase text-gray-400 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <Sparkles size={14} className="text-[var(--neon-pink)]" />
+            Powered by Mistral AI Codestral
+          </div>
+          <h1 className="text-6xl md:text-8xl font-black mb-8 tracking-tighter leading-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">
+            AI가 숨을 불어넣는 <br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--neon-cyan)] via-[var(--neon-purple)] to-[var(--neon-pink)]">마법의 블록 코딩</span>
+          </h1>
+          <p className="max-w-2xl mx-auto text-lg md:text-xl text-gray-400 leading-relaxed mb-12">
+            말하는 대로 코드가 짜이고, 캐릭터가 대화하며, 음악이 흐르는 세상을 만드세요.
+            아이들을 위한 가장 강력하고 직관적인 AI 네이티브 창작 환경입니다.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/main"
+              className="px-10 py-4 rounded-2xl bg-gradient-to-r from-[var(--neon-cyan)] to-[var(--neon-purple)] text-white font-bold text-lg glow-cyan hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 group"
             >
-              <X size={18} />
-            </button>
-          </div>
-          {/* Modal Body */}
-          <div className="w-full max-w-6xl aspect-video bg-[#0d0d14] border border-t-0 border-[var(--neon-cyan)]/30 rounded-b-2xl overflow-hidden relative glow-cyan">
-
-            {/* Empty state — no blocks dragged yet */}
-            {!hasCode && !isPreviewLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-[var(--neon-cyan)]/10 border border-[var(--neon-cyan)]/20 flex items-center justify-center">
-                  <Blocks className="w-8 h-8 text-[var(--neon-cyan)]/50" />
-                </div>
-                <div className="text-center">
-                  <p className="text-gray-400 font-semibold">No blocks yet</p>
-                  <p className="text-gray-600 text-sm mt-1">Drag some blocks onto the workspace first</p>
-                </div>
-              </div>
-            )}
-
-            {/* Loading overlay */}
-            {isPreviewLoading && (
-              <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#0d0d14]">
-                <div className="relative flex items-center justify-center mb-6">
-                  {/* Outer spinning ring */}
-                  <div className="w-20 h-20 rounded-full border-4 border-[var(--neon-cyan)]/20 border-t-[var(--neon-cyan)] animate-spin" />
-                  {/* Inner pulsing dot */}
-                  <div className="absolute w-8 h-8 rounded-full bg-[var(--neon-cyan)]/20 flex items-center justify-center">
-                    <div className="w-3 h-3 rounded-full bg-[var(--neon-cyan)] animate-pulse" />
-                  </div>
-                </div>
-                <p className="text-[var(--neon-cyan)] text-sm font-semibold tracking-widest uppercase animate-pulse">Initializing Magic...</p>
-                <p className="text-gray-600 text-xs mt-1">Running your blocks</p>
-              </div>
-            )}
-
-            {isHealing && (
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
-                <AlertCircle className="text-[var(--neon-pink)] mb-4 animate-pulse" size={48} />
-                <h4 className="text-2xl font-bold text-white mb-2">Self-Healing in Progress</h4>
-                <p className="text-[var(--neon-pink)] text-lg italic animate-pulse">&quot;{healingMessage}&quot;</p>
-              </div>
-            )}
-
-            <iframe
-              className="w-full h-full border-none"
-              title="Magic Preview"
-              sandbox="allow-scripts allow-modals allow-same-origin"
-              onLoad={handleIframeLoad}
-              srcDoc={`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body, html { margin: 0; padding: 0; background: #0d0d14; color: #fff; width: 100%; height: 100%; overflow: hidden; }
-    #app { width: 100%; height: 100%; position: relative; }
-    canvas { display: block; }
-  </style>
-</head>
-<body>
-  <div id="app"></div>
-  <script>
-    ${RUNTIME_CODE}
-  </script>
-  <script type="module">
-    window.addEventListener('error', (e) => {
-      console.error('Runtime Error:', e.message);
-      window.parent.postMessage({ type: 'error', message: e.message }, '*');
-    });
-    ${code}
-  </script>
-</body>
-</html>`}
-            />
+              지금 시작하기 <Zap size={20} fill="currentColor" className="group-hover:animate-bounce" />
+            </Link>
+            <a
+              href="#logic"
+              className="px-10 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-lg hover:bg-white/10 transition-all"
+            >
+              핵심 가이드
+            </a>
           </div>
         </div>
-      )}
+
+        {/* Feature Grid */}
+        <div id="logic" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-40">
+          <FeatureCard
+            icon={<Sparkles className="text-[var(--neon-pink)]" />}
+            title="실시간 AI 매직"
+            description="자연어로 원하는 기능을 설명하세요. Mistral AI가 즉시 실행 가능한 JavaScript 코드로 변환해줍니다."
+            tag="AI Core"
+          />
+          <FeatureCard
+            icon={<Mic className="text-[var(--neon-cyan)]" />}
+            title="목소리를 가진 캐릭터"
+            description="ElevenLabs의 고퀄리티 목소리로 캐릭터에게 개성을 부여하세요. 봇, 외계인, 영웅 등 다양한 프리셋이 준비되어 있습니다."
+            tag="Audio"
+          />
+          <FeatureCard
+            icon={<Brain className="text-[#00ff88]" />}
+            title="똑똑한 학습 보조"
+            description="'Explain This' 기능으로 AI가 짠 복잡한 코드를 초등학생 눈높이의 쉬운 한국어로 배워보세요."
+            tag="Learning"
+          />
+          <FeatureCard
+            icon={<Zap className="text-[#ff8800]" />}
+            title="스스로 치유되는 코드"
+            description="에러가 발생해도 걱정 마세요. AI가 실시간으로 원인을 파악하고 스스로 수정하여 게임이 멈추지 않게 합니다."
+            tag="Stability"
+          />
+          <FeatureCard
+            icon={<Music className="text-[var(--neon-purple)]" />}
+            title="분위기 맞춤 배경음악"
+            description="긴박함, 평화로움, 활기참 등 게임의 무드에 딱 맞는 배경음악을 AI가 선택해 재생해줍니다."
+            tag="Music"
+          />
+          <FeatureCard
+            icon={<MonitorPlay className="text-[#00e5ff]" />}
+            title="강력한 물리 엔진"
+            description="Matter.js와 p5.js가 결합된 런타임에서 중력, 충돌, 폭발 효과를 블록 하나로 구현하세요."
+            tag="Engine"
+          />
+        </div>
+
+        {/* Component Usage Logic Section */}
+        <div className="rounded-[2.5rem] bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/10 p-10 md:p-20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[var(--neon-pink)]/5 blur-[80px] rounded-full" />
+
+          <div className="max-w-3xl">
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-8 tracking-tight">어떻게 마법이 일어나나요?</h2>
+            <div className="space-y-12">
+              <UsageStep
+                num="01"
+                title="아이디어 구상"
+                content="Blockly 인터페이스에서 'AI Magic' 블록을 꺼내고 '적들이 나타나면 도망쳐'라고 입력합니다."
+              />
+              <UsageStep
+                num="02"
+                title="AI 코드 변환"
+                content="Mistral Codestral 모델이 해당 문장을 분석하여 엔티티 사이의 거리를 계산하는 p5.js 코드로 자동 생성합니다."
+              />
+              <UsageStep
+                num="03"
+                title="실시간 실행 및 시연"
+                content="'Run Magic'을 누르면 샌드박스 환경에서 즉시 코드가 실행됩니다. 캐릭터가 말을 하고 BGM이 깔리며 게임이 시작됩니다."
+              />
+            </div>
+
+            <div className="mt-20 pt-10 border-t border-white/5">
+              <Link
+                href="/main"
+                className="inline-flex items-center gap-2 text-[var(--neon-cyan)] font-bold hover:underline"
+              >
+                빌더 바로가기 <ChevronRight size={18} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer className="py-20 text-center border-t border-white/5 bg-black/40">
+        <p className="text-gray-500 text-sm">© 2026 Mistral Snap & Build. Project for Mistral Hackathon.</p>
+      </footer>
+
+      {/* Modern CSS for glowing effects */}
+      <style jsx global>{`
+        :root {
+          --neon-cyan: #00e5ff;
+          --neon-purple: #9000ff;
+          --neon-pink: #ff00c8;
+        }
+        .glow-cyan {
+          box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+        }
+        .glow-pink {
+          box-shadow: 0 0 20px rgba(255, 0, 200, 0.3);
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, description, tag }: { icon: React.ReactNode, title: string, description: string, tag: string }) {
+  return (
+    <div className="p-8 rounded-[2rem] bg-white/[0.03] border border-white/10 hover:border-white/20 hover:bg-white/[0.05] transition-all duration-500 group">
+      <div className="flex justify-between items-start mb-6">
+        <div className="w-12 h-12 rounded-2xl bg-white/[0.05] flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+          {icon}
+        </div>
+        <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500 border border-white/5 px-2 py-1 rounded-lg">
+          {tag}
+        </span>
+      </div>
+      <h3 className="text-xl font-bold mb-3">{title}</h3>
+      <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+function UsageStep({ num, title, content }: { num: string, title: string, content: string }) {
+  return (
+    <div className="flex gap-6">
+      <span className="text-4xl font-black text-white/10 select-none">{num}</span>
+      <div>
+        <h4 className="text-xl font-bold mb-2 text-white/90">{title}</h4>
+        <p className="text-gray-400 leading-relaxed text-sm md:text-base">{content}</p>
+      </div>
     </div>
   );
 }

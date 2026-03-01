@@ -15,14 +15,14 @@ const CyberpunkTheme = Blockly.Theme.defineTheme('cyberpunk', {
   name: 'cyberpunk',
   base: DarkTheme,
   blockStyles: {
-    'logic_blocks': { colourPrimary: '#5b80a5', colourSecondary: '#496d8c', colourTertiary: '#3a5771' },
-    'loop_blocks': { colourPrimary: '#FFBF00', colourSecondary: '#cc9900', colourTertiary: '#997300' },
-    'math_blocks': { colourPrimary: '#a55b80', colourSecondary: '#8c4968', colourTertiary: '#733a54' },
-    'text_blocks': { colourPrimary: '#a55b80', colourSecondary: '#8c4968', colourTertiary: '#733a54' },
-    'list_blocks': { colourPrimary: '#00e5ff', colourSecondary: '#00b8cc', colourTertiary: '#008c99' },
-    'colour_blocks': { colourPrimary: '#ff0066', colourSecondary: '#cc0052', colourTertiary: '#99003d' },
-    'variable_blocks': { colourPrimary: '#00ff88', colourSecondary: '#00cc6d', colourTertiary: '#009952' },
-    'procedure_blocks': { colourPrimary: '#ff8800', colourSecondary: '#cc6d00', colourTertiary: '#995200' },
+    'logic_blocks': { colourPrimary: '#1E88E5', colourSecondary: '#1976D2', colourTertiary: '#1565C0' },
+    'loop_blocks': { colourPrimary: '#BF360C', colourSecondary: '#A2300B', colourTertiary: '#8E2809' },
+    'math_blocks': { colourPrimary: '#4527A0', colourSecondary: '#311B92', colourTertiary: '#1A237E' },
+    'text_blocks': { colourPrimary: '#2E7D32', colourSecondary: '#286B2C', colourTertiary: '#215A25' },
+    'list_blocks': { colourPrimary: '#00838F', colourSecondary: '#006064', colourTertiary: '#004D40' },
+    'colour_blocks': { colourPrimary: '#C2185B', colourSecondary: '#AD1457', colourTertiary: '#880E4F' },
+    'variable_blocks': { colourPrimary: '#F57C00', colourSecondary: '#E65100', colourTertiary: '#BF360C' },
+    'procedure_blocks': { colourPrimary: '#D81B60', colourSecondary: '#C2185B', colourTertiary: '#AD1457' },
   },
   categoryStyles: {},
   componentStyles: {
@@ -46,58 +46,58 @@ const CyberpunkTheme = Blockly.Theme.defineTheme('cyberpunk', {
 });
 
 const CATEGORIES = [
-  { id: 'ai_magic', label: 'AI Magic', icon: Sparkles, color: '#ff00c8', borderColor: 'border-[#ff00c8]/30', bgColor: 'bg-[#ff00c8]/10', textColor: 'text-[#ff00c8]' },
-  { id: 'voice', label: 'Voice', icon: Mic, color: '#ff0066', borderColor: 'border-[#ff0066]/30', bgColor: 'bg-[#ff0066]/10', textColor: 'text-[#ff0066]' },
-  { id: 'visuals', label: 'Visuals', icon: Palette, color: '#ff0066', borderColor: 'border-[#ff0066]/30', bgColor: 'bg-[#ff0066]/10', textColor: 'text-[#ff0066]' },
-  { id: 'world', label: 'World', icon: Globe, color: '#9000ff', borderColor: 'border-[#9000ff]/30', bgColor: 'bg-[#9000ff]/10', textColor: 'text-[#9000ff]' },
-  { id: 'audio', label: 'Audio', icon: Volume2, color: '#FFBF00', borderColor: 'border-[#FFBF00]/30', bgColor: 'bg-[#FFBF00]/10', textColor: 'text-[#FFBF00]' },
-  { id: 'game', label: 'Game', icon: Gamepad2, color: '#00e5ff', borderColor: 'border-[#00e5ff]/30', bgColor: 'bg-[#00e5ff]/10', textColor: 'text-[#00e5ff]' },
-  { id: 'logic', label: 'Logic', icon: Brain, color: '#5b80a5', borderColor: 'border-[#5b80a5]/30', bgColor: 'bg-[#5b80a5]/10', textColor: 'text-[#5b80a5]' },
-  { id: 'math', label: 'Math', icon: Calculator, color: '#a55b80', borderColor: 'border-[#a55b80]/30', bgColor: 'bg-[#a55b80]/10', textColor: 'text-[#a55b80]' },
+  { id: 'ai_magic', label: 'AI Magic', icon: Sparkles, color: '#5E35B1', borderColor: 'border-[#5E35B1]/30', bgColor: 'bg-[#5E35B1]/10', textColor: 'text-[#5E35B1]' },
+  { id: 'voice', label: 'Voice', icon: Mic, color: '#C2185B', borderColor: 'border-[#C2185B]/30', bgColor: 'bg-[#C2185B]/10', textColor: 'text-[#C2185B]' },
+  { id: 'visuals', label: 'Visuals', icon: Palette, color: '#D81B60', borderColor: 'border-[#D81B60]/30', bgColor: 'bg-[#D81B60]/10', textColor: 'text-[#D81B60]' },
+  { id: 'world', label: 'World', icon: Globe, color: '#6A1B9A', borderColor: 'border-[#6A1B9A]/30', bgColor: 'bg-[#6A1B9A]/10', textColor: 'text-[#6A1B9A]' },
+  { id: 'audio', label: 'Audio', icon: Volume2, color: '#BF360C', borderColor: 'border-[#BF360C]/30', bgColor: 'bg-[#BF360C]/10', textColor: 'text-[#BF360C]' },
+  { id: 'game', label: 'Game', icon: Gamepad2, color: '#00838F', borderColor: 'border-[#00838F]/30', bgColor: 'bg-[#00838F]/10', textColor: 'text-[#00838F]' },
+  { id: 'logic', label: 'Logic', icon: Brain, color: '#1E88E5', borderColor: 'border-[#1E88E5]/30', bgColor: 'bg-[#1E88E5]/10', textColor: 'text-[#1E88E5]' },
+  { id: 'math', label: 'Math', icon: Calculator, color: '#4527A0', borderColor: 'border-[#4527A0]/30', bgColor: 'bg-[#4527A0]/10', textColor: 'text-[#4527A0]' },
 ];
 
 const TOOLBOX_XML = `
 <xml xmlns="https://developers.google.com/blockly/xml">
-  <category name="AI Magic" colour="#ff00c8">
+  <category name="AI Magic" colour="#5E35B1">
     <block type="magic_block"></block>
     <block type="remix_code_block"></block>
     <block type="add_feature_block"></block>
     <block type="magic_condition"></block>
     <block type="magic_styles"></block>
   </category>
-  <category name="Voice" colour="#ff0066">
+  <category name="Voice" colour="#C2185B">
     <block type="speak_block"></block>
     <block type="dialogue_2_block"></block>
     <block type="voice_style_block"></block>
     <block type="react_voice_block"></block>
   </category>
-  <category name="Visuals" colour="#ff0066">
+  <category name="Visuals" colour="#D81B60">
     <block type="draw_shape"></block>
     <block type="explode_particles"></block>
   </category>
-  <category name="World" colour="#9000ff">
+  <category name="World" colour="#6A1B9A">
     <block type="create_sprite"></block>
     <block type="move_forward"></block>
     <block type="turn_right"></block>
     <block type="set_gravity"></block>
     <block type="apply_force"></block>
   </category>
-  <category name="Audio" colour="#FFBF00">
+  <category name="Audio" colour="#BF360C">
     <block type="magic_bgm_block"></block>
     <block type="play_sfx_block"></block>
     <block type="play_frequency"></block>
   </category>
-  <category name="Game" colour="#00e5ff">
+  <category name="Game" colour="#00838F">
     <block type="add_score"></block>
     <block type="timer_every"></block>
     <block type="when_clicked"></block>
     <block type="always_loop"></block>
   </category>
-  <category name="Logic" colour="#5b80a5">
+  <category name="Logic" colour="#1E88E5">
     <block type="controls_if"></block>
     <block type="logic_compare"></block>
   </category>
-  <category name="Math" colour="#a55b80">
+  <category name="Math" colour="#4527A0">
     <block type="math_number"></block>
     <block type="text_print"></block>
     <block type="text"></block>
@@ -308,19 +308,24 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
         }
 
         /* Ensure the input fields are perfectly visible and high contrast */
-        .blocklyFieldRect {
-           fill: #111122 !important;
-           stroke: #00e5ff !important;
+        .blocklyFieldRect,
+        .blocklyBlock .blocklyPathDark,
+        .blocklyBlock .blocklyPathLight {
+           fill: #0a0a0f !important;
+           stroke: none !important;
+           fill-opacity: 1 !important;
         }
-        /* Text inside editable input boxes */
+        /* Text inside editable input boxes - now brighter and clearer */
         .blocklyEditableText > text,
-        .blocklyEditableText text {
-           fill: #00ffcc !important;
+        .blocklyEditableText text,
+        .blocklyFieldRect > text {
+           fill: #ffffff !important;
            font-weight: 600 !important;
+           font-size: 13px !important;
         }
         /* Non-editable label text inside blocks */
         .blocklyText {
-           fill: #e0e0e0 !important;
+           fill: #e0e4ef !important;
         }
       `}</style>
     </div>
