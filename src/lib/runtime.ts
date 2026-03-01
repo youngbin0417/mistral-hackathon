@@ -15,11 +15,17 @@ export const RUNTIME_CODE = `
     window.playBGM = (mood) => {
         if (window.bgmAudio) { window.bgmAudio.pause(); }
         try {
+            // Priority: Local file -> Placeholder or Synthetic tone fallback
             const src = '/audio/' + mood + '.mp3';
             window.bgmAudio = new Audio(src);
             window.bgmAudio.loop = true;
-            window.bgmAudio.volume = 0.5;
-            window.bgmAudio.play().catch(e => console.warn('BGM play blocked or missing file:', e));
+            window.bgmAudio.volume = 0.4;
+            
+            window.bgmAudio.play().catch(e => {
+                console.warn('BGM file missing or blocked:', mood);
+                // Fallback: Just play a subtle frequency to indicate BGM requested
+                window.playFrequency(mood === 'tense' ? 110 : 220, 100);
+            });
         } catch(e) { console.error('BGM error', e); }
     };
 
@@ -96,7 +102,21 @@ export const RUNTIME_CODE = `
     // ── Sprites & World ──────────────────────────────────────────────────
     window.createSprite = (name, x, y) => {
         if (!window.entities[name]) {
-            window.entities[name] = { x, y, angle: 0, color: '#00e5ff', vx: 0, vy: 0 };
+            window.entities[name] = { x, y, angle: 0, color: '#00e5ff', vx: 0, vy: 0, hp: 100, dead: false };
+        }
+    };
+
+    window.damageEntity = (name, amount) => {
+        const e = window.entities[name];
+        if (!e || e.dead) return;
+        e.hp -= amount;
+        if (e.hp <= 0) {
+            e.hp = 0;
+            e.dead = true;
+            document.dispatchEvent(new CustomEvent('game_defeat', { detail: { target: name } }));
+            if (typeof window.explodeParticles === 'function') {
+                window.explodeParticles(30, e.x, e.y);
+            }
         }
     };
 
@@ -161,11 +181,28 @@ export const RUNTIME_CODE = `
 
     // ── Canvas setup ─────────────────────────────────────────────────────
     const app = document.getElementById('app');
+    // Clean up existing canvases to prevent duplication on reload
+    if (app) {
+        const existingCanvases = app.querySelectorAll('canvas');
+        existingCanvases.forEach(c => c.remove());
+    }
+    
     const canvas = document.createElement('canvas');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    app.appendChild(canvas);
+    if (app) app.appendChild(canvas);
     const ctx = canvas.getContext('2d');
+
+    // ── Style Helper (for Magic Styles) ──────────────────────────────────
+    window.applyStyle = (config) => {
+        const app = document.getElementById('app');
+        if (!app) return;
+        if (typeof config === 'string') {
+            app.style.filter = config; // e.g. "hue-rotate(90deg) contrast(1.2)"
+        } else if (typeof config === 'object') {
+            Object.assign(app.style, config);
+        }
+    };
 
     // always_loop block support
     window.onFrameHandlers = [];
@@ -178,6 +215,8 @@ export const RUNTIME_CODE = `
             canvas.style.display = 'none';
         } else {
             canvas.style.display = 'block';
+            
+            // Clear background
             ctx.fillStyle = '#0d0d14';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -214,6 +253,7 @@ export const RUNTIME_CODE = `
             const entitiesArr = Object.entries(window.entities);
             for (let i = 0; i < entitiesArr.length; i++) {
                 const [name, e] = entitiesArr[i];
+                if (e.dead) continue; // Skip dead entities
                 
                 // Physics update
                 e.vy = (e.vy || 0) + (window.gravity || 0) * 0.1;
@@ -235,6 +275,11 @@ export const RUNTIME_CODE = `
                         if (!window._collisionCooldowns[pairId] || now - window._collisionCooldowns[pairId] > 1000) {
                             window._collisionCooldowns[pairId] = now;
                             document.dispatchEvent(new CustomEvent('game_damage', { detail: { target: name, source: name2 } }));
+                            
+                            // Apply damage on collision
+                            window.damageEntity(name, 25);
+                            window.damageEntity(name2, 25);
+                            
                             window.explodeParticles(15, (e.x + e2.x)/2, (e.y + e2.y)/2);
                         }
                     }

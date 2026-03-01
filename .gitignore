@@ -56,3 +56,6 @@ next-env.d.ts
 
 # Temporary files
 /tmp
+
+# Application internal status
+BLOCK_STATUS.md
