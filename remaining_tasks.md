@@ -27,8 +27,8 @@
 - [x] **Adaptive Sound / SFX Generator**: ElevenLabs SFX API for logic-based sound effects.
 
 ## 6. 🧠 Meta-Programming Blocks (New Proposal)
-- [ ] **Debug Explain**: Auto-catch Sandpack errors, explain via Mistral, and output via ElevenLabs.
-- [ ] **Remix Code / Add Feature**: Direct source code modification via Codestral diff.
+- [x] **Debug Explain**: Auto-catch Sandpack errors, explain via Mistral, and output via ElevenLabs.
+- [x] **Remix Code / Add Feature**: Direct source code modification via Codestral diff.
 
 ---
 

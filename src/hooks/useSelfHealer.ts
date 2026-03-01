@@ -41,13 +41,32 @@ export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: 
             }
             const data = (await response.json()) as HealResponse;
             if (data.fixedCode) {
-                setHealingMessage(data.explanation || "Bug fixed! ✨");
+                const expMsg = data.explanation || "Bug fixed! ✨";
+                setHealingMessage(expMsg);
+
+                // Play Explanation Audio via ElevenLabs immediately!
+                try {
+                    const res = await fetch('/api/speak', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        // Use the default or 'cute' voice ID if you prefer
+                        body: JSON.stringify({ text: expMsg, voiceId: 'EXAVITQu4vr4xnSDxMaL' })
+                    });
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const audio = new Audio(url);
+                        audio.play();
+                    }
+                } catch (e) { console.error("Self-Heal TTS error", e); }
+
+                // Wait 4 seconds for audio to play then replace the code completely
                 setTimeout(() => {
                     setCode(data.fixedCode);
                     setIsHealing(false);
                     setHealingMessage(null);
                     toast.success("Self-Healed successfully!");
-                }, 3000);
+                }, 4000);
             }
         } catch (err: unknown) {
             const errorMsg = err instanceof Error ? err.message : "Self-healing failed. Maybe check your prompts?";

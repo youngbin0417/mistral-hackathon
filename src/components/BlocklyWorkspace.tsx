@@ -61,6 +61,8 @@ const TOOLBOX_XML = `
 <xml xmlns="https://developers.google.com/blockly/xml">
   <category name="AI Magic" colour="#ff00c8">
     <block type="magic_block"></block>
+    <block type="remix_code_block"></block>
+    <block type="add_feature_block"></block>
     <block type="magic_condition"></block>
     <block type="magic_styles"></block>
   </category>

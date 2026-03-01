@@ -45,6 +45,33 @@ export function initializeCustomBlocks() {
         }
     };
 
+    // === 1.1 Meta-Programming ===
+    Blockly.Blocks['remix_code_block'] = {
+        init: function () {
+            this.jsonInit({
+                "message0": "🧠 Remix Code: %1",
+                "args0": [{ "type": "field_input", "name": "PROMPT", "text": "make it faster" }],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": "#ff00c8",
+                "tooltip": "Refactor/optimize code using Codestral"
+            });
+        }
+    };
+
+    Blockly.Blocks['add_feature_block'] = {
+        init: function () {
+            this.jsonInit({
+                "message0": "🧠 Add Feature: %1",
+                "args0": [{ "type": "field_input", "name": "PROMPT", "text": "add a power-up" }],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": "#ff00c8",
+                "tooltip": "Integrate a new logic logic into the game"
+            });
+        }
+    };
+
     // === 2. Visuals & Art ===
     Blockly.Blocks['draw_shape'] = {
         init: function () {
@@ -342,6 +369,22 @@ function registerGenerators() {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
         return `\n/* ✨ AI Request: Style ${target} like ${prompt} */\n{ console.log('AI_MAGIC_STYLE: ${target} -> ${escapedPrompt}'); }\n`;
+    };
+
+    javascriptGenerator.forBlock['remix_code_block'] = function (block: any) {
+        const prompt = block.getFieldValue('PROMPT');
+        const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        const code = `\n/* ✨ AI Request: REMIX CODE - "${escapedPrompt}" */\n{ console.log('AI_MAGIC_REMIX: ${escapedPrompt}'); }\n`;
+        if (block.getSvgRoot()) block.getSvgRoot().classList.add('magic-block-glow');
+        return code;
+    };
+
+    javascriptGenerator.forBlock['add_feature_block'] = function (block: any) {
+        const prompt = block.getFieldValue('PROMPT');
+        const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        const code = `\n/* ✨ AI Request: ADD FEATURE - "${escapedPrompt}" */\n{ console.log('AI_MAGIC_ADD: ${escapedPrompt}'); }\n`;
+        if (block.getSvgRoot()) block.getSvgRoot().classList.add('magic-block-glow');
+        return code;
     };
 
     javascriptGenerator.forBlock['move_forward'] = function (block: any) {
