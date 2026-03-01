@@ -137,22 +137,22 @@ pre,
 
 /* Block hover glow */
 .blocklyDraggable:hover>.blocklyPath {
-    filter: drop-shadow(0 0 4px rgba(0, 229, 255, 0.3)) !important;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2)) !important;
 }
 
 /* Block selected glow */
 .blocklySelected>.blocklyPath {
-    stroke: var(--neon-cyan) !important;
+    stroke: #ffffff !important;
     stroke-width: 2px !important;
     stroke-opacity: 0.8 !important;
-    filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.4)) !important;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) !important;
 }
 
 /* Magic blocks get extra special glow */
-.blocklyDraggable .blocklyPath[fill="#ff00c8"],
-.blocklyDraggable .blocklyPath[fill="#e600b4"],
-.blocklyDraggable .blocklyPathDark[fill="#a6008a"] {
-    filter: drop-shadow(0 0 6px rgba(255, 0, 200, 0.4)) drop-shadow(0 0 12px rgba(255, 0, 200, 0.15)) !important;
+.blocklyDraggable .blocklyPath[fill="#B39DDB"],
+.blocklyDraggable .blocklyPath[fill="#F48FB1"],
+.blocklyDraggable .blocklyPath[fill="#CE93D8"] {
+    filter: drop-shadow(0 4px 12px rgba(188, 153, 225, 0.4)) !important;
 }
 
 /* --- Field Inputs inside blocks --- */
@@ -175,7 +175,7 @@ pre,
 .blocklyEditableText>text.blocklyText {
     font-family: 'Fredoka', sans-serif !important;
     font-weight: 500 !important;
-    font-size: 11px !important;
+    font-size: 13px !important;
     fill: #ffffff !important;
 }
 
