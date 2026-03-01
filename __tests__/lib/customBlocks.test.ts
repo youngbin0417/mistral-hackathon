@@ -14,7 +14,7 @@ describe('Custom Blocks Integration', () => {
             'remix_code_block', 'add_feature_block',
             'draw_shape', 'explode_particles',
             'move_forward', 'turn_right', 'set_gravity', 'apply_force', 'create_sprite',
-            'speak_block', 'voice_style_block', 'react_voice_block',
+            'speak_block', 'dialogue_2_block', 'voice_style_block', 'react_voice_block',
             'magic_bgm_block', 'play_sfx_block', 'play_frequency',
             'add_score', 'timer_every', 'when_clicked', 'always_loop',
             'text_print'
@@ -105,9 +105,19 @@ describe('Custom Blocks Integration', () => {
         it('generates correct JS for voice_style_block', () => {
             const block = workspace.newBlock('voice_style_block');
             block.setFieldValue('Hero', 'CHARACTER');
-            block.setFieldValue('cute', 'STYLE');
+            block.setFieldValue('robot', 'STYLE');
             const code = javascriptGenerator.blockToCode(block) as string;
-            expect(code).toContain('setVoiceStyle("Hero", "cute")');
+            expect(code).toContain('setVoiceStyle("Hero", "robot")');
+        });
+
+        it('generates correct JS for dialogue_2_block', () => {
+            const block = workspace.newBlock('dialogue_2_block');
+            block.setFieldValue('Hero', 'SPEAKER_1');
+            block.setFieldValue('Hello', 'TEXT_1');
+            block.setFieldValue('Villain', 'SPEAKER_2');
+            block.setFieldValue('Die!', 'TEXT_2');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('dialogueScene("Hero", "Hello", "Villain", "Die!")');
         });
 
         it('generates correct JS for react_voice_block', () => {
@@ -121,9 +131,9 @@ describe('Custom Blocks Integration', () => {
 
         it('generates correct JS for magic_bgm_block', () => {
             const block = workspace.newBlock('magic_bgm_block');
-            block.setFieldValue('tense battle', 'PROMPT');
+            block.setFieldValue('tense', 'MOOD');
             const code = javascriptGenerator.blockToCode(block) as string;
-            expect(code).toContain('playBGM("tense battle")');
+            expect(code).toContain('playBGM("tense")');
         });
 
         it('generates correct JS for play_sfx_block', () => {

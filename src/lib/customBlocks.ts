@@ -211,12 +211,29 @@ export function initializeCustomBlocks() {
                         "type": "field_dropdown",
                         "name": "STYLE",
                         "options": [
-                            ["Cute", "cute"],
-                            ["Scary", "scary"],
-                            ["Robot", "robot"],
-                            ["Default", "default"]
+                            ["Default (Adam)", "default"],
+                            ["Villain (Antoni)", "villain"],
+                            ["Robot (Josh)", "robot"],
+                            ["Alien (Sam)", "alien"]
                         ]
                     }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": "#ff0066"
+            });
+        }
+    };
+
+    Blockly.Blocks['dialogue_2_block'] = {
+        init: function () {
+            this.jsonInit({
+                "message0": "🎙️ Dialogue Scene\n %1 says %2\n %3 says %4",
+                "args0": [
+                    { "type": "field_input", "name": "SPEAKER_1", "text": "Hero" },
+                    { "type": "field_input", "name": "TEXT_1", "text": "Stop right there!" },
+                    { "type": "field_input", "name": "SPEAKER_2", "text": "Villain" },
+                    { "type": "field_input", "name": "TEXT_2", "text": "Never!" }
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
@@ -314,13 +331,23 @@ export function initializeCustomBlocks() {
     Blockly.Blocks['magic_bgm_block'] = {
         init: function () {
             this.jsonInit({
-                "message0": "🎵 Magic BGM %1",
+                "message0": "✨ AI Generates BGM: Mood %1",
                 "args0": [
-                    { "type": "field_input", "name": "PROMPT", "text": "tense 8-bit space battle" }
+                    {
+                        "type": "field_dropdown",
+                        "name": "MOOD",
+                        "options": [
+                            ["Tense", "tense"],
+                            ["Peaceful", "peaceful"],
+                            ["Exciting", "exciting"],
+                            ["Mysterious", "mysterious"]
+                        ]
+                    }
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#FFBF00"
+                "colour": "#ff00cc",
+                "tooltip": "Plays AI generated background music"
             });
         }
     };
@@ -455,9 +482,17 @@ function registerGenerators() {
     };
 
     javascriptGenerator.forBlock['speak_block'] = function (block: Blockly.Block) {
-        const text = block.getFieldValue('TEXT');
+        const text = block.getFieldValue('TEXT').replace(/"/g, '\\"');
         const character = block.getFieldValue('CHARACTER');
         return `if(typeof speakText === "function") speakText("${text}", "${character}");\n`;
+    };
+
+    javascriptGenerator.forBlock['dialogue_2_block'] = function (block: Blockly.Block) {
+        const s1 = block.getFieldValue('SPEAKER_1');
+        const t1 = block.getFieldValue('TEXT_1').replace(/"/g, '\\"');
+        const s2 = block.getFieldValue('SPEAKER_2');
+        const t2 = block.getFieldValue('TEXT_2').replace(/"/g, '\\"');
+        return `if(typeof dialogueScene === "function") dialogueScene("${s1}", "${t1}", "${s2}", "${t2}");\n`;
     };
 
     javascriptGenerator.forBlock['voice_style_block'] = function (block: Blockly.Block) {
@@ -468,13 +503,13 @@ function registerGenerators() {
 
     javascriptGenerator.forBlock['react_voice_block'] = function (block: Blockly.Block) {
         const event = block.getFieldValue('EVENT');
-        const prompt = block.getFieldValue('PROMPT');
+        const prompt = block.getFieldValue('PROMPT').replace(/"/g, '\\"');
         return `document.addEventListener("game_${event}", () => { if(typeof reactWithVoice === "function") reactWithVoice("${prompt}"); });\n`;
     };
 
     javascriptGenerator.forBlock['magic_bgm_block'] = function (block: Blockly.Block) {
-        const prompt = block.getFieldValue('PROMPT');
-        return `if(typeof playBGM === "function") playBGM("${prompt}");\n`;
+        const mood = block.getFieldValue('MOOD');
+        return `if(typeof playBGM === "function") playBGM("${mood}");\n`;
     };
 
     javascriptGenerator.forBlock['play_sfx_block'] = function (block: Blockly.Block) {

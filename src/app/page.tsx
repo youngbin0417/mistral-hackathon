@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { SandpackProvider, SandpackLayout, SandpackCodeEditor } from "@codesandbox/sandpack-react";
-import { Play, X, Sparkles, AlertCircle, Blocks, Copy, Check } from "lucide-react";
+import { Play, X, Sparkles, AlertCircle, Blocks, Copy, Check, MessageCircleQuestion } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 import toast, { Toaster } from 'react-hot-toast';
@@ -128,6 +128,34 @@ export default function Home() {
     });
   };
 
+  const [isExplainModalOpen, setIsExplainModalOpen] = useState(false);
+  const [isExplaining, setIsExplaining] = useState(false);
+  const [explanation, setExplanation] = useState("");
+
+  const handleExplain = async () => {
+    if (!code.trim()) return;
+    setIsExplainModalOpen(true);
+    setIsExplaining(true);
+    setExplanation("");
+    try {
+      const res = await fetch('/api/explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setExplanation(data.explanation);
+      } else {
+        setExplanation(data.error || "Failed to explain.");
+      }
+    } catch {
+      setExplanation("Network error occurred.");
+    } finally {
+      setIsExplaining(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[100dvh] bg-[var(--background)] text-[var(--foreground)] overflow-hidden">
       <Toaster position="bottom-right" reverseOrder={false} toastOptions={{
@@ -181,6 +209,14 @@ export default function Home() {
                   >
                     <Play size={14} fill="currentColor" />
                     Run Magic
+                  </button>
+                  {/* Explain button */}
+                  <button
+                    onClick={handleExplain}
+                    title="Explain This Code"
+                    className="p-1.5 rounded-lg hover:bg-[var(--neon-pink)]/10 text-[var(--neon-pink)] transition-colors hover:shadow-[0_0_10px_rgba(255,0,200,0.2)]"
+                  >
+                    <MessageCircleQuestion className="w-4 h-4" />
                   </button>
                   {/* Copy button */}
                   <button
@@ -248,6 +284,45 @@ export default function Home() {
       {/* AI Status Bar (Bottom) */}
       <AIStatusBar isGenerating={isGenerating} isHealing={isHealing} healingMessage={healingMessage} />
 
+      {/* Explain Code Modal */}
+      {isExplainModalOpen && (
+        <div className="fixed inset-0 z-[300] flex justify-center items-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-[var(--card)] w-full max-w-lg rounded-2xl border border-[var(--border)] shadow-2xl flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-[var(--border)]">
+              <h2 className="text-lg font-bold flex items-center gap-2 text-[var(--neon-pink)]">
+                <MessageCircleQuestion className="w-5 h-5" />
+                Explain This Code
+              </h2>
+              <button onClick={() => setIsExplainModalOpen(false)} className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="bg-black/50 p-4 rounded-xl border border-[var(--border)] text-sm font-mono text-gray-300 overflow-y-auto max-h-32 mb-4">
+                <pre>{code.split('\n').slice(0, 10).join('\n')}{code.split('\n').length > 10 ? '\n...' : ''}</pre>
+              </div>
+              <div className="min-h-[80px] flex items-center justify-center">
+                {isExplaining ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <Sparkles className="w-6 h-6 text-[var(--neon-pink)] animate-spin" />
+                    <p className="text-sm text-gray-400">Analyzing code...</p>
+                  </div>
+                ) : (
+                  <p className="text-base leading-relaxed text-gray-200">{explanation}</p>
+                )}
+              </div>
+            </div>
+            <div className="p-4 border-t border-[var(--border)] flex justify-end">
+              <button
+                onClick={() => setIsExplainModalOpen(false)}
+                className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Massive Preview Modal */}
       {isPreviewModalOpen && (

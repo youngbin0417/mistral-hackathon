@@ -66,7 +66,7 @@ describe('/api/speak API Route', () => {
 
         // Verify fetch was called correctly
         expect(global.fetch).toHaveBeenCalledWith(
-            'https://api.elevenlabs.io/v1/text-to-speech/voice123',
+            'https://api.elevenlabs.io/v1/text-to-speech/voice123?optimize_streaming_latency=2',
             expect.objectContaining({
                 method: 'POST',
                 headers: expect.objectContaining({

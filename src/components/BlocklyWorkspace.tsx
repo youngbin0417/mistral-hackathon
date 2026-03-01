@@ -67,6 +67,7 @@ const TOOLBOX_XML = `
   </category>
   <category name="Voice" colour="#ff0066">
     <block type="speak_block"></block>
+    <block type="dialogue_2_block"></block>
     <block type="voice_style_block"></block>
     <block type="react_voice_block"></block>
   </category>

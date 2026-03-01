@@ -12,20 +12,14 @@ export const RUNTIME_CODE = `
     window.gravity = 0;
 
     // ── Audio ────────────────────────────────────────────────────────────
-    window.playBGM = async (prompt) => {
+    window.playBGM = (mood) => {
         if (window.bgmAudio) { window.bgmAudio.pause(); }
         try {
-            const res = await fetch('/api/sfx', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: prompt, duration_seconds: 5, isBGM: true })
-            });
-            if (res.ok) {
-                const blob = await res.blob();
-                window.bgmAudio = new Audio(URL.createObjectURL(blob));
-                window.bgmAudio.loop = true;
-                window.bgmAudio.play();
-            }
+            const src = '/audio/' + mood + '.mp3';
+            window.bgmAudio = new Audio(src);
+            window.bgmAudio.loop = true;
+            window.bgmAudio.volume = 0.5;
+            window.bgmAudio.play().catch(e => console.warn('BGM play blocked or missing file:', e));
         } catch(e) { console.error('BGM error', e); }
     };
 
@@ -58,27 +52,43 @@ export const RUNTIME_CODE = `
     window.voiceStyles = {};
     window.setVoiceStyle = (character, style) => { window.voiceStyles[character] = style; };
 
-    window.speakText = async (text, character) => {
-        const style = window.voiceStyles[character] || 'default';
-        let voiceId = '21m00Tcm4TlvDq8ikWAM';
-        if (style === 'cute') voiceId = 'EXAVITQu4vr4xnSDxMaL';
-        if (style === 'scary') voiceId = 'bVMeCyTHy58xNoL34h3p';
-        if (style === 'robot') voiceId = 'VR6AewLTigWG4xSOukaG';
-        try {
-            const res = await fetch('/api/speak', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text, voiceId })
-            });
-            if (res.ok) {
-                const audio = new Audio(URL.createObjectURL(await res.blob()));
-                audio.play();
-                if (window.entities[character]) {
-                    window.entities[character].speaking = text;
-                    audio.onended = () => { window.entities[character].speaking = null; };
+    window.speakText = (text, character) => {
+        return new Promise(async (resolve) => {
+            const style = window.voiceStyles[character] || 'default';
+            let voiceId = 'pNInz6obpgDQGcFmaJcg'; // default: Adam
+            if (style === 'villain') voiceId = 'ErXwobaYiN019PkySvjV';
+            if (style === 'robot') voiceId = 'tx3xgqwjuJCIPX6B28xE';
+            if (style === 'alien') voiceId = 'yoZ06aMxZJJ28mfd3POQ';
+            
+            try {
+                const res = await fetch('/api/speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, voiceId })
+                });
+                if (res.ok) {
+                    const audio = new Audio(URL.createObjectURL(await res.blob()));
+                    
+                    if (window.entities[character]) {
+                        window.entities[character].speaking = text;
+                        audio.onended = () => { 
+                            window.entities[character].speaking = null; 
+                            resolve(); 
+                        };
+                    } else {
+                        audio.onended = resolve;
+                    }
+                    audio.play();
+                } else {
+                    resolve();
                 }
-            }
-        } catch(e) { console.error('Audio error', e); }
+            } catch(e) { console.error('Audio error', e); resolve(); }
+        });
+    };
+
+    window.dialogueScene = async (s1, t1, s2, t2) => {
+        await window.speakText(t1, s1);
+        await window.speakText(t2, s2);
     };
 
     window.reactWithVoice = (prompt) => window.speakText(prompt, 'Hero');
