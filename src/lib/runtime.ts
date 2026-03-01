@@ -10,6 +10,7 @@ export const RUNTIME_CODE = `
     window.bgmAudio = null;
     window.score = 0;
     window.gravity = 0;
+    window.gameStarted = false;
 
     // ── Audio ────────────────────────────────────────────────────────────
     window.playBGM = (mood) => {
@@ -210,15 +211,12 @@ export const RUNTIME_CODE = `
 
     function draw() {
         // ... (existing canvas logic)
-        const extraCanvas = document.querySelectorAll('canvas').length > 1;
-        if (extraCanvas) {
-            canvas.style.display = 'none';
-        } else {
-            canvas.style.display = 'block';
-            
-            // Clear background
-            ctx.fillStyle = '#0d0d14';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Run the main draw loop
+        canvas.style.display = 'block';
+        
+        // Clear background
+        ctx.fillStyle = '#0d0d14';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Draw shapes (temporary)
             window._shapes = (window._shapes || []).filter(s => s.life-- > 0);
@@ -260,9 +258,9 @@ export const RUNTIME_CODE = `
                 e.x += (e.vx || 0);
                 e.y += (e.vy || 0);
 
-                // Simple Circle Collision Check
                 for (let j = i + 1; j < entitiesArr.length; j++) {
                     const [name2, e2] = entitiesArr[j];
+                    if (e2.dead) continue; // Skip dead target entities
                     const dx = e.x - e2.x;
                     const dy = e.y - e2.y;
                     const dist = Math.sqrt(dx*dx + dy*dy);
@@ -325,8 +323,18 @@ export const RUNTIME_CODE = `
     }
     draw();
 
+    // Export a helper to check start status
+    window.onGameStart = (callback) => {
+        if (window.gameStarted) {
+            callback();
+        } else {
+            document.addEventListener('game_start', callback);
+        }
+    };
+
     // Auto-trigger game_start event
     setTimeout(() => {
+        window.gameStarted = true;
         document.dispatchEvent(new CustomEvent('game_start'));
     }, 500);
 `;

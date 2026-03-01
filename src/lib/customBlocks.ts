@@ -484,7 +484,7 @@ function registerGenerators() {
     javascriptGenerator.forBlock['speak_block'] = function (block: Blockly.Block) {
         const text = block.getFieldValue('TEXT').replace(/"/g, '\\"');
         const character = block.getFieldValue('CHARACTER');
-        return `if(typeof speakText === "function") speakText("${text}", "${character}");\n`;
+        return `if(typeof speakText === "function") await speakText("${text}", "${character}");\n`;
     };
 
     javascriptGenerator.forBlock['dialogue_2_block'] = function (block: Blockly.Block) {
@@ -492,7 +492,7 @@ function registerGenerators() {
         const t1 = block.getFieldValue('TEXT_1').replace(/"/g, '\\"');
         const s2 = block.getFieldValue('SPEAKER_2');
         const t2 = block.getFieldValue('TEXT_2').replace(/"/g, '\\"');
-        return `if(typeof dialogueScene === "function") dialogueScene("${s1}", "${t1}", "${s2}", "${t2}");\n`;
+        return `if(typeof dialogueScene === "function") await dialogueScene("${s1}", "${t1}", "${s2}", "${t2}");\n`;
     };
 
     javascriptGenerator.forBlock['voice_style_block'] = function (block: Blockly.Block) {
@@ -504,7 +504,12 @@ function registerGenerators() {
     javascriptGenerator.forBlock['react_voice_block'] = function (block: Blockly.Block) {
         const event = block.getFieldValue('EVENT');
         const prompt = block.getFieldValue('PROMPT').replace(/"/g, '\\"');
-        return `document.addEventListener("game_${event}", () => { if(typeof reactWithVoice === "function") reactWithVoice("${prompt}"); });\n`;
+        const code = `if(typeof reactWithVoice === "function") reactWithVoice("${prompt}");`;
+
+        if (event === 'start') {
+            return `if(typeof onGameStart === "function") { onGameStart(() => { ${code} }); } else { document.addEventListener("game_start", () => { ${code} }); }\n`;
+        }
+        return `document.addEventListener("game_${event}", () => { ${code} });\n`;
     };
 
     javascriptGenerator.forBlock['magic_bgm_block'] = function (block: Blockly.Block) {
