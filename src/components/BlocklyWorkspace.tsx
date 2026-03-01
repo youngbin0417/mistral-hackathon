@@ -81,6 +81,8 @@ const TOOLBOX_XML = `
     <block type="apply_force"></block>
   </category>
   <category name="Audio" colour="#FFBF00">
+    <block type="magic_bgm_block"></block>
+    <block type="play_sfx_block"></block>
     <block type="play_frequency"></block>
   </category>
   <category name="Game" colour="#00e5ff">

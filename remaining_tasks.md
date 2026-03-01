@@ -23,8 +23,8 @@
 - [x] **React with Voice / NPC Dialog**: Event trigger to TTS generation via Mistral.
 
 ## 5. 🎵 AI Audio Engine Blocks (New Proposal)
-- [ ] **Magic BGM Block**: Mistral prompt sequence to generate `p5.sound` parameters (BPM, scales, instruments).
-- [ ] **Adaptive Sound / SFX Generator**: Logic generation for game-state reactive audio and oscillator combination.
+- [x] **Magic BGM Block**: ElevenLabs SFX API to generate background music.
+- [x] **Adaptive Sound / SFX Generator**: ElevenLabs SFX API for logic-based sound effects.
 
 ## 6. 🧠 Meta-Programming Blocks (New Proposal)
 - [ ] **Debug Explain**: Auto-catch Sandpack errors, explain via Mistral, and output via ElevenLabs.

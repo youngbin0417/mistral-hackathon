@@ -149,6 +149,41 @@ export default function Home() {
   <script>
     // --- SNAP & BUILD RUNTIME ---
     window.entities = {};
+    window.bgmAudio = null;
+    window.playBGM = async (prompt) => {
+        if (window.bgmAudio) { window.bgmAudio.pause(); }
+        try {
+            console.log("Generating BGM:", prompt);
+            const res = await fetch('/api/sfx', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: prompt, duration_seconds: 5, isBGM: true })
+            });
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                window.bgmAudio = new Audio(url);
+                window.bgmAudio.loop = true;
+                window.bgmAudio.play();
+            }
+        } catch(e) { console.error("BGM error", e); }
+    };
+    window.playSFX = async (prompt) => {
+        try {
+             console.log("Generating SFX:", prompt);
+            const res = await fetch('/api/sfx', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: prompt, duration_seconds: 1, isBGM: false })
+            });
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio(url);
+                audio.play();
+            }
+        } catch(e) { console.error("SFX error", e); }
+    };
     window.voiceStyles = {};
     window.setVoiceStyle = (character, style) => { window.voiceStyles[character] = style; };
     window.speakText = async (text, character) => {
@@ -329,6 +364,39 @@ export default function Home() {
                   <script>
                     // --- SNAP & BUILD RUNTIME ---
                     window.entities = {};
+                    window.bgmAudio = null;
+                    window.playBGM = async (prompt) => {
+                        if (window.bgmAudio) { window.bgmAudio.pause(); }
+                        try {
+                            const res = await fetch('/api/sfx', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ text: prompt, duration_seconds: 5, isBGM: true })
+                            });
+                            if (res.ok) {
+                                const blob = await res.blob();
+                                const url = URL.createObjectURL(blob);
+                                window.bgmAudio = new Audio(url);
+                                window.bgmAudio.loop = true;
+                                window.bgmAudio.play();
+                            }
+                        } catch(e) { console.error("BGM error", e); }
+                    };
+                    window.playSFX = async (prompt) => {
+                        try {
+                            const res = await fetch('/api/sfx', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ text: prompt, duration_seconds: 1, isBGM: false })
+                            });
+                            if (res.ok) {
+                                const blob = await res.blob();
+                                const url = URL.createObjectURL(blob);
+                                const audio = new Audio(url);
+                                audio.play();
+                            }
+                        } catch(e) { console.error("SFX error", e); }
+                    };
                     window.voiceStyles = {};
                     window.setVoiceStyle = (character, style) => { window.voiceStyles[character] = style; };
                     window.speakText = async (text, character) => {

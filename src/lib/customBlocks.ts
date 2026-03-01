@@ -277,6 +277,35 @@ export function initializeCustomBlocks() {
         }
     };
 
+    // === 7. ElevenLabs Audio Engine (BGM & SFX) ===
+    Blockly.Blocks['magic_bgm_block'] = {
+        init: function () {
+            this.jsonInit({
+                "message0": "🎵 Magic BGM %1",
+                "args0": [
+                    { "type": "field_input", "name": "PROMPT", "text": "tense 8-bit space battle" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": "#FFBF00"
+            });
+        }
+    };
+
+    Blockly.Blocks['play_sfx_block'] = {
+        init: function () {
+            this.jsonInit({
+                "message0": "🔊 Play SFX %1",
+                "args0": [
+                    { "type": "field_input", "name": "PROMPT", "text": "laser gun pew" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": "#FFBF00"
+            });
+        }
+    };
+
     // Overrides
     Blockly.Blocks['text_print'] = { // We redefine to ensure standard block exists locally if needed or let system handle it, but we only override generator below.
         init: function () {
@@ -380,6 +409,16 @@ function registerGenerators() {
         const event = block.getFieldValue('EVENT');
         const prompt = block.getFieldValue('PROMPT');
         return `document.addEventListener("game_${event}", () => { if(typeof reactWithVoice === "function") reactWithVoice("${prompt}"); });\n`;
+    };
+
+    javascriptGenerator.forBlock['magic_bgm_block'] = function (block: any) {
+        const prompt = block.getFieldValue('PROMPT');
+        return `if(typeof playBGM === "function") playBGM("${prompt}");\n`;
+    };
+
+    javascriptGenerator.forBlock['play_sfx_block'] = function (block: any) {
+        const prompt = block.getFieldValue('PROMPT');
+        return `if(typeof playSFX === "function") playSFX("${prompt}");\n`;
     };
 
     javascriptGenerator.forBlock['add_score'] = function (block: any) {
