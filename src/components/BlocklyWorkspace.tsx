@@ -243,7 +243,7 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2 flex-wrap">
+      <div className="px-4 py-3 flex items-center gap-2 flex-wrap">
         {CATEGORIES.map((cat, index) => {
           const Icon = cat.icon;
           const isActive = activeCategory === cat.id;
@@ -272,6 +272,38 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
       </div>
 
       <style jsx global>{`
+
+        /* ── Block borders: remove white emboss / bright stroke ── */
+        /* Blockly applies an emboss SVG filter (white specular light) and
+           auto-calculates a bright tertiary stroke for custom-color blocks.
+           Override both so blocks have no harsh outline. */
+        .blocklyDraggable > .blocklyPath,
+        .blocklyBlock > .blocklyPath {
+          stroke: none !important;
+          filter: none !important;
+        }
+
+        /* ── Workspace borders: remove any white/light outlines ── */
+        .blockly-workspace-container,
+        .blocklySvg,
+        .blocklyMainBackground,
+        .blocklyInjectionDiv {
+          border: none !important;
+          stroke: none !important;
+          outline: none !important;
+        }
+
+        /* Prevent auto-added border for generating state if it's annoying */
+        .blockly-generating::after {
+          display: none !important;
+        }
+
+        /* Remove focus rings on workspace/canvas */
+        .blocklyWorkspace:focus,
+        .blocklyWorkspace:focus-visible,
+        svg.blocklySvg:focus-visible {
+          outline: none !important;
+        }
 
         /* Ensure the input fields are perfectly visible and high contrast */
         .blocklyFieldRect {

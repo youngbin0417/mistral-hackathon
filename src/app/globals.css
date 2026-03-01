@@ -119,15 +119,13 @@ pre,
 }
 
 .blocklyFlyout {
-    border-right: 1px solid var(--border);
+    border: none !important;
 }
 
 /* --- Block Styling (Zelos renderer) --- */
 .blocklyPath {
-    stroke-width: 1px !important;
-    stroke-opacity: 0.25 !important;
+    stroke: none !important;
     filter: none !important;
-    transition: filter 0.2s ease;
 }
 
 /* Block hover glow */
@@ -159,8 +157,8 @@ pre,
     fill: #0a0a0f !important;
     /* Deeper dark for inputs */
     fill-opacity: 1 !important;
-    stroke: rgba(0, 229, 255, 0.4) !important;
-    stroke-width: 1px !important;
+    stroke: none !important;
+    stroke-width: 0 !important;
 }
 
 /* Ensure text inside blocks is white */
@@ -185,6 +183,7 @@ pre,
 .blocklyEditableText:hover>.blocklyFieldRect {
     fill: #000000 !important;
     stroke: var(--neon-cyan) !important;
+    stroke-width: 1px !important;
 }
 
 /* Editing HTML Input (When user clicks to type) */
@@ -322,7 +321,7 @@ pre,
     background: rgba(13, 13, 20, 0.7) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 229, 255, 0.1);
+    border: none !important;
 }
 
 /* --- AI Generation BG Pulse --- */
@@ -331,14 +330,7 @@ pre,
 }
 
 .blockly-generating::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border: 2px solid var(--neon-pink);
-    border-radius: 0;
-    pointer-events: none;
-    animation: border-glow 2s ease-in-out infinite;
-    z-index: 40;
+    display: none !important;
 }
 
 @keyframes border-glow {

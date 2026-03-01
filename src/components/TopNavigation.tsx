@@ -8,7 +8,7 @@ interface TopNavigationProps {
 
 export default function TopNavigation({ injectedLibs, isGenerating }: TopNavigationProps) {
     return (
-        <header className="flex items-center justify-between px-5 py-3 border-b border-[var(--border)] bg-[var(--card)]/80 backdrop-blur-md mb-0">
+        <header className="flex items-center justify-between px-5 py-3 bg-[var(--card)]/80 backdrop-blur-md mb-0 shadow-sm shadow-black/20 relative z-10">
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--neon-cyan)] to-[var(--neon-purple)] flex items-center justify-center glow-cyan animate-float">
                     <Rocket className="w-5 h-5 text-[var(--background)]" />

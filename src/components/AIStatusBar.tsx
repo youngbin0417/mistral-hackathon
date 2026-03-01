@@ -38,7 +38,7 @@ export default function AIStatusBar({ isGenerating, isHealing, healingMessage }:
         : phases[phase];
 
     return (
-        <div className="flex items-center justify-between px-5 py-2.5 border-t border-[var(--border)] bg-[var(--card)]/80 backdrop-blur-md">
+        <div className="flex items-center justify-between px-5 py-2.5 bg-[var(--card)]/80 backdrop-blur-md relative z-10 shadow-lg shadow-black/30">
             <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5">
                     <span className={current.color}>{current.icon}</span>

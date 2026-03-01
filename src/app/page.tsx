@@ -133,14 +133,14 @@ export default function Home() {
           </Panel>
 
           <Separator className="w-1.5 hover:bg-[var(--neon-cyan)]/20 transition-colors flex items-center justify-center group">
-            <div className="h-12 w-0.5 bg-[var(--border)] group-hover:bg-[var(--neon-cyan)] rounded-full transition-colors" />
+            <div className="h-12 w-0.5 bg-gray-800/30 group-hover:bg-[var(--neon-cyan)] rounded-full transition-colors" />
           </Separator>
 
           {/* Code Area */}
           <Panel defaultSize={58} minSize={30} className="flex flex-col">
             <div className="h-full flex flex-col">
               {/* Code Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+              <div className="flex items-center justify-between px-4 py-3 bg-[var(--card)]/50 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
                   <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Live Engine Code</p>
