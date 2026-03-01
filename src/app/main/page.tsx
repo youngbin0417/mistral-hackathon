@@ -233,7 +233,7 @@ export default function Home() {
                             </div>
 
                             {/* Code Body */}
-                            <div className="flex-1 relative overflow-hidden bg-[var(--background)]">
+                            <div className="flex-1 min-h-0 relative overflow-hidden bg-[var(--background)] flex flex-col">
                                 <SandpackErrorBoundary>
                                     <SandpackProvider
                                         template="vanilla"
@@ -263,12 +263,12 @@ export default function Home() {
                                             dependencies: SANDPACK_LIBRARIES
                                         }}
                                     >
-                                        <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', display: 'flex', flexDirection: 'column' }}>
+                                        <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                                             <SandpackCodeEditor
                                                 readOnly={true}
                                                 showTabs={false}
                                                 showLineNumbers={true}
-                                                style={{ flex: 1, height: "100%", border: 'none', overflow: 'auto' }}
+                                                style={{ flex: 1, border: 'none', minHeight: 0, overflow: 'auto' }}
                                             />
                                         </SandpackLayout>
 
