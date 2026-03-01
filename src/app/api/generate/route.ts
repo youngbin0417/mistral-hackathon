@@ -110,14 +110,15 @@ You MUST return ONLY a valid JSON object with exactly this structure:
 
         // Combine AI detected libs with rule-based detection for maximum safety
         const detectedLibraries = new Set<string>(finalResponseData.libraries || []);
-        if (generatedCode.includes('Matter.') || generatedCode.includes('Matter =')) {
+        if (generatedCode.match(/loadSound|p5\.SoundFile|p5\.Oscillator|new p5\.Noise/)) {
+            detectedLibraries.add('p5.sound');
+            detectedLibraries.add('p5'); // p5.sound depends on p5
+        }
+        if (generatedCode.match(/Matter\.|Matter\s*=/)) {
             detectedLibraries.add('matter-js');
         }
-        if (generatedCode.includes('p5') || generatedCode.includes('createCanvas') || generatedCode.includes('setup(')) {
+        if (generatedCode.match(/p5|createCanvas|setup\(|draw\(/)) {
             detectedLibraries.add('p5');
-        }
-        if (generatedCode.includes('loadSound') || generatedCode.includes('p5.SoundFile')) {
-            detectedLibraries.add('p5.sound');
         }
 
         const injectedLibraries = Array.from(detectedLibraries);

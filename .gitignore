@@ -14,6 +14,9 @@
 jest_output.txt
 output.test.txt
 output2.txt
+out2.txt
+out3.txt
+
 
 # next.js
 /.next/

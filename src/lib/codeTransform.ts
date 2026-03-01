@@ -74,8 +74,12 @@ export function applyCachedReplacements(
  */
 export function prependImports(sourceCode: string, libs: string[]): string {
     let imports = '';
-    if (libs.includes('p5') && !sourceCode.includes("esm.sh/p5")) {
+    if (libs.includes('p5') && !sourceCode.includes("esm.sh/p5@")) {
         imports += `import p5 from 'https://esm.sh/p5@1.9.0';\n`;
+    }
+    if (libs.includes('p5.sound') && !sourceCode.includes("esm.sh/p5@") && !sourceCode.includes("p5.sound")) {
+        // p5.sound is a p5 addon, needs p5 to be loaded.
+        imports += `import 'https://esm.sh/p5@1.9.0/lib/addons/p5.sound.js';\n`;
     }
     if (libs.includes('matter-js') && !sourceCode.includes("esm.sh/matter-js")) {
         imports += `import Matter from 'https://esm.sh/matter-js@0.19.0';\n`;

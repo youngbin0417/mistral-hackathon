@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles } from 'lucide-react';
 
+interface Magic {
+    prompt: string;
+    code: string;
+    timestamp: number;
+}
+
 export default function RecentMagics() {
-    const [recent, setRecent] = useState<any[]>([]);
+    const [recent, setRecent] = useState<Magic[]>([]);
 
     useEffect(() => {
         const fetchRecent = async () => {
@@ -34,6 +40,7 @@ export default function RecentMagics() {
                         key={i}
                         className="flex-shrink-0 bg-black/40 border border-gray-800 hover:border-pink-500/50 p-2 rounded-md transition-all cursor-help group"
                         title={m.prompt}
+                        aria-label={`Code generation prompt: ${m.prompt}`}
                     >
                         <p className="text-[10px] text-cyan-400 font-mono mb-1 tracking-tighter opacity-70">
                             {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

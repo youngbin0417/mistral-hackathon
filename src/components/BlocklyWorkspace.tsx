@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as Blockly from 'blockly/core';
 import 'blockly/blocks';
 import * as En from 'blockly/msg/en';
-import { javascriptGenerator, Order } from 'blockly/javascript';
+import { javascriptGenerator } from 'blockly/javascript';
 import DarkTheme from '@blockly/theme-dark';
 import { initializeCustomBlocks } from '@/lib/customBlocks';
 import { Sparkles, Palette, Globe, Volume2, Gamepad2, Brain, Calculator, Mic } from 'lucide-react';
@@ -45,7 +45,6 @@ const CyberpunkTheme = Blockly.Theme.defineTheme('cyberpunk', {
   },
 });
 
-// Category definitions for our custom palette bar
 const CATEGORIES = [
   { id: 'ai_magic', label: 'AI Magic', icon: Sparkles, color: '#ff00c8', borderColor: 'border-[#ff00c8]/30', bgColor: 'bg-[#ff00c8]/10', textColor: 'text-[#ff00c8]' },
   { id: 'voice', label: 'Voice', icon: Mic, color: '#ff0066', borderColor: 'border-[#ff0066]/30', bgColor: 'bg-[#ff0066]/10', textColor: 'text-[#ff0066]' },
@@ -104,7 +103,12 @@ const TOOLBOX_XML = `
   </category>
 </xml>`;
 
-export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }: { onCodeChange: (code: string) => void, isGenerating?: boolean }) {
+interface BlocklyWorkspaceProps {
+  onCodeChange: (code: string) => void;
+  isGenerating?: boolean;
+}
+
+export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }: BlocklyWorkspaceProps) {
   const blocklyDiv = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<Blockly.WorkspaceSvg | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -120,11 +124,9 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
     if (!toolbox) return;
 
     if (activeCategory === categoryId) {
-      // Toggle off: close flyout
       workspaceRef.current.getFlyout()?.hide();
       setActiveCategory(null);
     } else {
-      // Select the category by index to open its flyout
       toolbox.selectItemByPosition(index);
       setActiveCategory(categoryId);
     }
@@ -133,8 +135,7 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
   useEffect(() => {
     initializeCustomBlocks();
 
-    if (!blocklyDiv.current) return;
-    if (workspaceRef.current) return;
+    if (!blocklyDiv.current || workspaceRef.current) return;
 
     workspaceRef.current = Blockly.inject(blocklyDiv.current, {
       toolbox: TOOLBOX_XML,
@@ -164,11 +165,12 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
     });
 
     const handleResize = () => {
-      Blockly.svgResize(workspaceRef.current!);
+      if (workspaceRef.current) {
+        Blockly.svgResize(workspaceRef.current);
+      }
     };
     window.addEventListener('resize', handleResize);
 
-    // Watch for panel resizes
     const resizeObserver = new ResizeObserver(() => {
       handleResize();
     });
@@ -176,43 +178,15 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
       resizeObserver.observe(blocklyDiv.current);
     }
 
-    // CSS alone is not enough because Blockly calculates SVG positioning based on the toolbox.
-    // We MUST force the toolbox width to 0 via JS and trigger a resize so the workspace takes up the full width.
-    let isHiding = false;
-    const hideToolbox = () => {
-      if (isHiding) return;
-      isHiding = true;
-
-      const toolbox = workspaceRef.current?.getToolbox();
-      if (toolbox) {
-        const htmlElement = (toolbox as any).HtmlDiv || (toolbox as any).htmlDiv_;
-        if (htmlElement) {
-          htmlElement.style.display = 'none';
-          htmlElement.style.width = '0px';
+    const onWorkspaceChange = (event: Blockly.Events.Abstract) => {
+      if (event.type === Blockly.Events.UI) {
+        const uiEvent = event as any;
+        // Flyout closed → deactivate top button
+        if (uiEvent.element === 'flyout' && uiEvent.oldValue === true && uiEvent.newValue === false) {
+          setActiveCategory(null);
         }
+        return;
       }
-
-      document.querySelectorAll('.blocklyToolboxDiv').forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        htmlEl.style.setProperty('display', 'none', 'important');
-        htmlEl.style.setProperty('width', '0px', 'important');
-      });
-
-      handleResize();
-      isHiding = false;
-    };
-
-    requestAnimationFrame(hideToolbox);
-    setTimeout(hideToolbox, 100);
-    setTimeout(hideToolbox, 300);
-
-    const observer = new MutationObserver(() => {
-      requestAnimationFrame(hideToolbox);
-    });
-    observer.observe(document.body, { childList: true, subtree: false });
-
-    const onWorkspaceChange = (event: any) => {
-      if (event.type === Blockly.Events.UI) return;
       if (!workspaceRef.current) return;
       const code = javascriptGenerator.workspaceToCode(workspaceRef.current);
       onCodeChangeRef.current(code);
@@ -222,18 +196,53 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
     const initialCode = javascriptGenerator.workspaceToCode(workspaceRef.current);
     onCodeChangeRef.current(initialCode);
 
+    // ── Click-listener: sync left toolbox → top buttons ───────────────────
+    // aria-selected stays "false" in this Blockly version, so API/MutationObserver
+    // are both useless. Instead we traverse the click target up to the category
+    // container and read the label text directly — version-agnostic and reliable.
+    let toolboxClickCleanup: (() => void) | null = null;
+    const attachToolboxClickListener = () => {
+      const toolboxDiv = blocklyDiv.current?.querySelector('.blocklyToolbox') as HTMLElement | null
+        ?? document.querySelector('.blocklyToolbox') as HTMLElement | null;
+      if (!toolboxDiv) return;
+
+      const handleToolboxClick = (e: Event) => {
+        const target = e.target as HTMLElement;
+        // Walk up from the click target to find the category container
+        const container =
+          target.closest<HTMLElement>('.blocklyToolboxCategoryContainer') ??
+          target.closest<HTMLElement>('.blocklyToolboxCategory');
+        if (!container) return;
+
+        const label =
+          container.querySelector('.blocklyToolboxCategoryLabel')?.textContent?.trim() ?? '';
+        if (!label) return;
+
+        const matched = CATEGORIES.find(
+          c => c.label.toLowerCase() === label.toLowerCase()
+        );
+        setActiveCategory(matched ? matched.id : null);
+      };
+
+      toolboxDiv.addEventListener('click', handleToolboxClick);
+      toolboxClickCleanup = () => toolboxDiv.removeEventListener('click', handleToolboxClick);
+    };
+    // Toolbox DOM is injected asynchronously; wait a tick before attaching.
+    setTimeout(attachToolboxClickListener, 300);
+
     return () => {
       window.removeEventListener('resize', handleResize);
       resizeObserver.disconnect();
-      observer.disconnect();
-      workspaceRef.current?.dispose();
-      workspaceRef.current = null;
+      toolboxClickCleanup?.();
+      if (workspaceRef.current) {
+        workspaceRef.current.dispose();
+        workspaceRef.current = null;
+      }
     };
   }, []);
 
   return (
     <div className="h-full flex flex-col">
-      {/* Custom Top Palette Bar */}
       <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2 flex-wrap">
         {CATEGORIES.map((cat, index) => {
           const Icon = cat.icon;
@@ -243,13 +252,13 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
               key={cat.id}
               onClick={() => handleCategoryClick(cat.id, index)}
               className={`
-                                flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer
-                                border transition-all duration-200 active:scale-95
-                                ${isActive
+                flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer
+                border transition-all duration-200 active:scale-95
+                ${isActive
                   ? `${cat.bgColor} ${cat.borderColor} ${cat.textColor} shadow-[0_0_12px_rgba(0,0,0,0.3)]`
                   : `bg-transparent border-[var(--border)] text-gray-400 hover:text-gray-200 hover:border-gray-600`
                 }
-                            `}
+              `}
             >
               <Icon className="w-3.5 h-3.5" />
               {cat.label}
@@ -258,22 +267,28 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
         })}
       </div>
 
-      {/* Blockly Container (toolbox hidden via CSS) */}
       <div className={`flex-1 relative overflow-hidden ${isGenerating ? 'blockly-generating' : ''}`}>
         <div ref={blocklyDiv} className="absolute inset-0 w-full h-full blockly-workspace-container" />
-
-        {/* AI Scanning Overlay */}
-        {isGenerating && (
-          <div className="absolute inset-0 z-50 pointer-events-none flex flex-col items-center justify-center overflow-hidden">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[var(--neon-pink)] to-transparent animate-scanline"></div>
-            <div className="absolute inset-0 bg-[var(--neon-pink)]/5 backdrop-blur-[1px]"></div>
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-16 h-16 border-4 border-[var(--neon-pink)] border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-[var(--neon-pink)] font-mono text-sm tracking-tighter bg-black/60 px-4 py-1.5 rounded-xl">SCANNING LOGIC...</p>
-            </div>
-          </div>
-        )}
       </div>
+
+      <style jsx global>{`
+
+        /* Ensure the input fields are perfectly visible and high contrast */
+        .blocklyFieldRect {
+           fill: #111122 !important;
+           stroke: #00e5ff !important;
+        }
+        /* Text inside editable input boxes */
+        .blocklyEditableText > text,
+        .blocklyEditableText text {
+           fill: #00ffcc !important;
+           font-weight: 600 !important;
+        }
+        /* Non-editable label text inside blocks */
+        .blocklyText {
+           fill: #e0e0e0 !important;
+        }
+      `}</style>
     </div>
   );
 }
