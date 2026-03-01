@@ -147,24 +147,26 @@ export const RUNTIME_CODE = `
     app.appendChild(canvas);
     const ctx = canvas.getContext('2d');
 
+    // always_loop block support
+    window.onFrameHandlers = [];
+    window.onFrame = (fn) => { if (typeof fn === 'function') window.onFrameHandlers.push(fn); };
+
     function draw() {
+        // ... (existing canvas logic)
         const extraCanvas = document.querySelectorAll('canvas').length > 1;
         if (extraCanvas) {
-            // A lib (like p5) owns the display — hide our canvas
             canvas.style.display = 'none';
         } else {
             canvas.style.display = 'block';
             ctx.fillStyle = '#0d0d14';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Apply gravity + velocity to entities
             Object.values(window.entities).forEach(e => {
                 e.vy = (e.vy || 0) + (window.gravity || 0) * 0.1;
                 e.x += (e.vx || 0);
                 e.y += (e.vy || 0);
             });
 
-            // Draw shapes (temporary)
             window._shapes = (window._shapes || []).filter(s => s.life-- > 0);
             window._shapes.forEach(s => {
                 ctx.fillStyle = '#00e5ff';
@@ -183,7 +185,6 @@ export const RUNTIME_CODE = `
                 ctx.fill();
             });
 
-            // Draw particles
             window._particles = (window._particles || []).filter(p => p.life-- > 0);
             window._particles.forEach(p => {
                 p.x += p.vx; p.y += p.vy;
@@ -193,7 +194,6 @@ export const RUNTIME_CODE = `
             });
             ctx.globalAlpha = 1;
 
-            // Draw sprites
             Object.entries(window.entities).forEach(([name, e]) => {
                 ctx.save();
                 ctx.translate(e.x, e.y);
@@ -219,7 +219,6 @@ export const RUNTIME_CODE = `
                 }
             });
 
-            // Score display
             if (window.score) {
                 ctx.fillStyle = '#00e5ff';
                 ctx.font = 'bold 20px monospace';
@@ -227,8 +226,10 @@ export const RUNTIME_CODE = `
             }
         }
 
-        // always_loop block hook
-        if (typeof window.onFrame === 'function') window.onFrame();
+        // Run all registered frame handlers
+        window.onFrameHandlers.forEach(handler => {
+            try { handler(); } catch(e) { console.error('Frame handler error', e); }
+        });
 
         requestAnimationFrame(draw);
     }

@@ -492,7 +492,7 @@ function registerGenerators() {
 
     javascriptGenerator.forBlock['always_loop'] = function (block: Blockly.Block) {
         const branch = javascriptGenerator.statementToCode(block, 'STACK') || "";
-        return `window.onFrame = function() {\n${branch}};\n`;
+        return `window.onFrame(function() {\n${branch}});\n`;
     };
 
     javascriptGenerator.forBlock['text_print'] = function (block: Blockly.Block) {
