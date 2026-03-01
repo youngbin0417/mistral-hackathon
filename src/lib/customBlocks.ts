@@ -276,7 +276,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#FFD54F"
+                "colour": "#F57C00"
             });
         }
     };
@@ -302,7 +302,7 @@ export function initializeCustomBlocks() {
                     { "type": "field_number", "name": "SECONDS", "value": 1 },
                     { "type": "input_statement", "name": "STACK" }
                 ],
-                "colour": "#FFD54F"
+                "colour": "#F57C00"
             });
         }
     };
@@ -312,7 +312,7 @@ export function initializeCustomBlocks() {
             this.jsonInit({
                 "message0": "When Clicked %1",
                 "args0": [{ "type": "input_statement", "name": "STACK" }],
-                "colour": "#FFD54F"
+                "colour": "#F57C00"
             });
         }
     };
@@ -322,7 +322,7 @@ export function initializeCustomBlocks() {
             this.jsonInit({
                 "message0": "Always (Every Frame) %1",
                 "args0": [{ "type": "input_statement", "name": "STACK" }],
-                "colour": "#FFD54F"
+                "colour": "#F57C00"
             });
         }
     };
@@ -361,7 +361,7 @@ export function initializeCustomBlocks() {
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
-                "colour": "#FFD54F"
+                "colour": "#F57C00"
             });
         }
     };
