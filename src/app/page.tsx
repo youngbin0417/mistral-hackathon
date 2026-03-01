@@ -16,6 +16,25 @@ import { useSelfHealer } from '@/hooks/useSelfHealer';
 import { SANDPACK_LIBRARIES } from '@/config/constants';
 import { RUNTIME_CODE } from '@/lib/runtime';
 
+class SandpackErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.error("Sandpack crashed:", error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div className="p-4 text-[var(--neon-pink)] bg-black/50 border border-[var(--neon-pink)] rounded-xl m-4">Sandpack preview crashed. Please reload the page or reset the app.</div>;
+    }
+    return this.props.children;
+  }
+}
+
 const BlocklyWorkspace = dynamic(() => import('@/components/BlocklyWorkspace'), {
   ssr: false,
   loading: () => <div className="absolute inset-0 flex items-center justify-center text-gray-600 font-medium">Loading Blockly...</div>
@@ -178,12 +197,13 @@ export default function Home() {
 
               {/* Code Body */}
               <div className="flex-1 relative overflow-hidden bg-[var(--background)]">
-                <SandpackProvider
-                  template="vanilla"
-                  theme="dark"
-                  files={{
-                    "/index.js": `console.log("index.js started");\n` + code,
-                    "/index.html": `<!DOCTYPE html>
+                <SandpackErrorBoundary>
+                  <SandpackProvider
+                    template="vanilla"
+                    theme="dark"
+                    files={{
+                      "/index.js": `console.log("index.js started");\n` + code,
+                      "/index.html": `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -201,23 +221,24 @@ export default function Home() {
   <script src="index.js"></script>
 </body>
 </html>`
-                  }}
-                  customSetup={{
-                    dependencies: SANDPACK_LIBRARIES
-                  }}
-                >
-                  <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', display: 'flex', flexDirection: 'column' }}>
-                    <SandpackCodeEditor
-                      readOnly={true}
-                      showTabs={false}
-                      showLineNumbers={true}
-                      style={{ flex: 1, height: "100%", border: 'none', overflow: 'auto' }}
-                    />
-                  </SandpackLayout>
+                    }}
+                    customSetup={{
+                      dependencies: SANDPACK_LIBRARIES
+                    }}
+                  >
+                    <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', display: 'flex', flexDirection: 'column' }}>
+                      <SandpackCodeEditor
+                        readOnly={true}
+                        showTabs={false}
+                        showLineNumbers={true}
+                        style={{ flex: 1, height: "100%", border: 'none', overflow: 'auto' }}
+                      />
+                    </SandpackLayout>
 
-                  <SelfHealer isHealing={isHealing} lastError={lastError} handleHeal={handleHeal} />
+                    <SelfHealer isHealing={isHealing} lastError={lastError} handleHeal={handleHeal} />
 
-                </SandpackProvider>
+                  </SandpackProvider>
+                </SandpackErrorBoundary>
               </div>
             </div>
           </Panel>

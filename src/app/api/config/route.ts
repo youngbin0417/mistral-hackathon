@@ -20,6 +20,9 @@ export async function POST(req: Request) {
         process.env.MISTRAL_API_KEY = apiKey;
 
         // Save to .env file for persistence
+        // WARNING: Modifying .env directly will not work in production environments 
+        // with read-only filesystems (like Vercel) or containerized setups. 
+        // Recommended to use environment-specific storage (database/secret manager) in prod.
         const envPath = path.join(process.cwd(), '.env');
         let envContent = '';
         if (fs.existsSync(envPath)) {

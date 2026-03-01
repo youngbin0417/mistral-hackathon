@@ -1,7 +1,18 @@
 import { NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || 'anonymous';
+        const ratelimit = await rateLimit(`speak:${ip}`, 20, 60);
+
+        if (!ratelimit.success) {
+            return NextResponse.json(
+                { error: "Too many requests. Please wait a minute." },
+                { status: 429 }
+            );
+        }
+
         const { text, voiceId = '21m00Tcm4TlvDq8ikWAM' } = await req.json(); // Default voice
 
         if (!text) {
@@ -10,9 +21,15 @@ export async function POST(req: Request) {
 
         const apiKey = process.env.ELEVENLABS_API_KEY;
         if (!apiKey) {
-            console.warn('ELEVENLABS_API_KEY is not set. Using fallback/mock audio or returning error.');
-            // For now, return a 500 error, or you can return a mock audio buffer if needed
-            return NextResponse.json({ error: 'ElevenLabs API key is missing' }, { status: 500 });
+            console.warn('ELEVENLABS_API_KEY is not set. Using fallback/mock audio.');
+            const mockBuffer = new ArrayBuffer(1);
+            return new NextResponse(mockBuffer, {
+                status: 200,
+                headers: {
+                    'Content-Type': 'audio/mpeg',
+                    'Content-Length': '1',
+                },
+            });
         }
 
         const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {

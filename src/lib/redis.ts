@@ -65,6 +65,8 @@ class CacheManager implements CacheStore {
                 this.enableFallback();
                 if (!this.hasLoggedError) {
                     logger.warn("Redis connection failed. Switching to in-memory cache. Run 'docker compose up -d' in the observability folder to enable Redis.");
+                    // Note: In serverless environments, this flag resets per function instantiation. 
+                    // Consider external metrics/observability to avoid log spam.
                     this.hasLoggedError = true;
                 }
             });

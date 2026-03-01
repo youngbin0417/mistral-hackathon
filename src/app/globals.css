@@ -94,6 +94,9 @@ pre,
 }
 
 /* --- Toolbox: FULLY HIDDEN (replaced by custom React palette bar) --- */
+/* Note: Using display: none !important is a brute force approach to hide Blockly's default 
+   toolbox completely, as we are replacing it with our highly customized React-based block palette. 
+   This might require updates if Blockly's internal DOM structure changes in future versions. */
 .blocklyToolboxDiv,
 .blocklyToolbox,
 .blocklyToolboxContents,

@@ -12,6 +12,12 @@ export function useSelfHealer(codeRef: React.MutableRefObject<string>, setCode: 
         // Track errors by both the message and the specific code state that produced it
         // This prevents stale counts when the code has changed but throws the same error
         const errorKey = `${errorMessage}_${codeRef.current}`;
+
+        // Prevent memory leak for long sessions
+        if (Object.keys(healingAttemptsRef.current).length > 50) {
+            healingAttemptsRef.current = {};
+        }
+
         const attempts = healingAttemptsRef.current[errorKey] || 0;
 
         if (attempts >= 3) {
