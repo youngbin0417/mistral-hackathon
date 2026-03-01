@@ -70,7 +70,9 @@ export function useAiGeneration(initialCode: string) {
         let cacheChanged = false;
         const newCache = { ...aiCacheRef.current };
         Object.keys(newCache).forEach(prompt => {
-            if (!rawCode.includes(`// AI: ${prompt}`)) {
+            const escapedPrompt = prompt.replace(/"/g, '\\"'); // Escape double quotes for inclusion in string literal
+            // Check for the AI marker comment in the raw code
+            if (!rawCode.includes(`/* ✨ AI Request: "${escapedPrompt}" */`)) {
                 delete newCache[prompt];
                 cacheChanged = true;
             }

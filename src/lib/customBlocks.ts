@@ -355,7 +355,9 @@ function registerGenerators() {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
         const code = `\n/* ✨ AI Request: "${prompt}" */\n{ console.log('AI_MAGIC_TRIGGER: ${escapedPrompt}'); }\n`;
-        if (block.getSvgRoot()) block.getSvgRoot().classList.add('magic-block-glow');
+        if (typeof block.getSvgRoot === 'function' && block.getSvgRoot()) {
+            block.getSvgRoot().classList.add('magic-block-glow');
+        }
         return code;
     };
 
@@ -375,7 +377,9 @@ function registerGenerators() {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
         const code = `\n/* ✨ AI Request: REMIX CODE - "${escapedPrompt}" */\n{ console.log('AI_MAGIC_REMIX: ${escapedPrompt}'); }\n`;
-        if (block.getSvgRoot()) block.getSvgRoot().classList.add('magic-block-glow');
+        if (typeof block.getSvgRoot === 'function' && block.getSvgRoot()) {
+            block.getSvgRoot().classList.add('magic-block-glow');
+        }
         return code;
     };
 
@@ -383,7 +387,9 @@ function registerGenerators() {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
         const code = `\n/* ✨ AI Request: ADD FEATURE - "${escapedPrompt}" */\n{ console.log('AI_MAGIC_ADD: ${escapedPrompt}'); }\n`;
-        if (block.getSvgRoot()) block.getSvgRoot().classList.add('magic-block-glow');
+        if (typeof block.getSvgRoot === 'function' && block.getSvgRoot()) {
+            block.getSvgRoot().classList.add('magic-block-glow');
+        }
         return code;
     };
 

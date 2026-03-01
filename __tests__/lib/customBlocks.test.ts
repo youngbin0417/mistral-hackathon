@@ -11,9 +11,11 @@ describe('Custom Blocks Integration', () => {
     it('registers all expected custom blocks', () => {
         const expectedBlocks = [
             'magic_block', 'magic_condition', 'magic_styles',
+            'remix_code_block', 'add_feature_block',
             'draw_shape', 'explode_particles',
             'move_forward', 'turn_right', 'set_gravity', 'apply_force', 'create_sprite',
-            'play_frequency',
+            'speak_block', 'voice_style_block', 'react_voice_block',
+            'magic_bgm_block', 'play_sfx_block', 'play_frequency',
             'add_score', 'timer_every', 'when_clicked', 'always_loop',
             'text_print'
         ];
@@ -73,6 +75,59 @@ describe('Custom Blocks Integration', () => {
             const code = javascriptGenerator.blockToCode(block) as string;
             expect(code).toContain('setInterval(function() {');
             expect(code).toContain('}, 5000)');
+        });
+
+        it('generates correct JS for speak_block', () => {
+            const block = workspace.newBlock('speak_block');
+            block.setFieldValue('Hello', 'TEXT');
+            block.setFieldValue('Hero', 'CHARACTER');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('speakText("Hello", "Hero")');
+        });
+
+        it('generates correct JS for voice_style_block', () => {
+            const block = workspace.newBlock('voice_style_block');
+            block.setFieldValue('Hero', 'CHARACTER');
+            block.setFieldValue('cute', 'STYLE');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('setVoiceStyle("Hero", "cute")');
+        });
+
+        it('generates correct JS for react_voice_block', () => {
+            const block = workspace.newBlock('react_voice_block');
+            block.setFieldValue('damage', 'EVENT');
+            block.setFieldValue('Ouch!', 'PROMPT');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('document.addEventListener("game_damage"');
+            expect(code).toContain('reactWithVoice("Ouch!")');
+        });
+
+        it('generates correct JS for magic_bgm_block', () => {
+            const block = workspace.newBlock('magic_bgm_block');
+            block.setFieldValue('tense battle', 'PROMPT');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('playBGM("tense battle")');
+        });
+
+        it('generates correct JS for play_sfx_block', () => {
+            const block = workspace.newBlock('play_sfx_block');
+            block.setFieldValue('laser', 'PROMPT');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('playSFX("laser")');
+        });
+
+        it('generates correct JS for remix_code_block', () => {
+            const block = workspace.newBlock('remix_code_block');
+            block.setFieldValue('make it faster', 'PROMPT');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('AI_MAGIC_REMIX: make it faster');
+        });
+
+        it('generates correct JS for add_feature_block', () => {
+            const block = workspace.newBlock('add_feature_block');
+            block.setFieldValue('add a power-up', 'PROMPT');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('AI_MAGIC_ADD: add a power-up');
         });
     });
 });
