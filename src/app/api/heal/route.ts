@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Mistral } from '@mistralai/mistralai';
 import { logger } from '@/lib/logger';
-import { redis } from '@/lib/redis';
 import { rateLimit } from '@/lib/rateLimit';
-import { ApiErrorResponse, HealRequest, HealResponse } from '@/types/api';
+import { ApiErrorResponse, HealRequest } from '@/types/api';
 
 export async function POST(req: Request) {
     try {
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const { error, code, prompt } = (await req.json()) as HealRequest;
+        const { error, code } = (await req.json()) as HealRequest;
 
         logger.info({ error }, `[AI Heal] Requesting Mistral API to fix error: "${error}"`);
 

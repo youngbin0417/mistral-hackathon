@@ -9,7 +9,7 @@ import DarkTheme from '@blockly/theme-dark';
 import { initializeCustomBlocks } from '@/lib/customBlocks';
 import { Sparkles, Palette, Globe, Volume2, Gamepad2, Brain, Calculator, Mic } from 'lucide-react';
 
-Blockly.setLocale(En as any);
+Blockly.setLocale(En as unknown as Record<string, string>);
 
 const CyberpunkTheme = Blockly.Theme.defineTheme('cyberpunk', {
   name: 'cyberpunk',
@@ -180,7 +180,7 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
 
     const onWorkspaceChange = (event: Blockly.Events.Abstract) => {
       if (event.type === Blockly.Events.UI) {
-        const uiEvent = event as any;
+        const uiEvent = event as Blockly.Events.Abstract & { element?: string; oldValue?: unknown; newValue?: unknown };
         // Flyout closed → deactivate top button
         if (uiEvent.element === 'flyout' && uiEvent.oldValue === true && uiEvent.newValue === false) {
           setActiveCategory(null);

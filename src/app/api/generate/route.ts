@@ -23,7 +23,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const { prompt, context } = (await req.json()) as GenerateRequest;
+        const { prompt } = (await req.json()) as GenerateRequest;
 
         logger.info({ prompt }, `[AI Backend] Requesting Mistral API for prompt: "${prompt}"`);
 

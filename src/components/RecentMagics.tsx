@@ -35,7 +35,7 @@ export default function RecentMagics() {
                 Recent Community Magics
             </h3>
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                {recent.map((m: any, i: number) => (
+                {recent.map((m: Magic, i: number) => (
                     <div
                         key={i}
                         className="flex-shrink-0 bg-black/40 border border-gray-800 hover:border-pink-500/50 p-2 rounded-md transition-all cursor-help group"

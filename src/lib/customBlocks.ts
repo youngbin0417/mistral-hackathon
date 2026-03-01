@@ -351,147 +351,150 @@ export function initializeCustomBlocks() {
 }
 
 function registerGenerators() {
-    javascriptGenerator.forBlock['magic_block'] = function (block: any) {
+    javascriptGenerator.forBlock['magic_block'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
         const code = `\n/* ✨ AI Request: "${prompt}" */\n{ console.log('AI_MAGIC_TRIGGER: ${escapedPrompt}'); }\n`;
-        if (typeof block.getSvgRoot === 'function' && block.getSvgRoot()) {
-            block.getSvgRoot().classList.add('magic-block-glow');
+        const svgBlock = block as Blockly.BlockSvg;
+        if (typeof svgBlock.getSvgRoot === 'function' && svgBlock.getSvgRoot()) {
+            svgBlock.getSvgRoot().classList.add('magic-block-glow');
         }
         return code;
     };
 
-    javascriptGenerator.forBlock['magic_condition'] = function (block: any) {
+    javascriptGenerator.forBlock['magic_condition'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT').replace(/'/g, "\\'").replace(/"/g, '\\"');
         return [`/* ✨ AI CONDITION: "${prompt}" */ true`, Order.ATOMIC];
     };
 
-    javascriptGenerator.forBlock['magic_styles'] = function (block: any) {
+    javascriptGenerator.forBlock['magic_styles'] = function (block: Blockly.Block) {
         const target = block.getFieldValue('TARGET');
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
         return `\n/* ✨ AI Request: Style ${target} like ${prompt} */\n{ console.log('AI_MAGIC_STYLE: ${target} -> ${escapedPrompt}'); }\n`;
     };
 
-    javascriptGenerator.forBlock['remix_code_block'] = function (block: any) {
+    javascriptGenerator.forBlock['remix_code_block'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
         const code = `\n/* ✨ AI Request: REMIX CODE - "${escapedPrompt}" */\n{ console.log('AI_MAGIC_REMIX: ${escapedPrompt}'); }\n`;
-        if (typeof block.getSvgRoot === 'function' && block.getSvgRoot()) {
-            block.getSvgRoot().classList.add('magic-block-glow');
+        const svgBlock = block as Blockly.BlockSvg;
+        if (typeof svgBlock.getSvgRoot === 'function' && svgBlock.getSvgRoot()) {
+            svgBlock.getSvgRoot().classList.add('magic-block-glow');
         }
         return code;
     };
 
-    javascriptGenerator.forBlock['add_feature_block'] = function (block: any) {
+    javascriptGenerator.forBlock['add_feature_block'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT');
         const escapedPrompt = prompt.replace(/'/g, "\\'").replace(/"/g, '\\"');
         const code = `\n/* ✨ AI Request: ADD FEATURE - "${escapedPrompt}" */\n{ console.log('AI_MAGIC_ADD: ${escapedPrompt}'); }\n`;
-        if (typeof block.getSvgRoot === 'function' && block.getSvgRoot()) {
-            block.getSvgRoot().classList.add('magic-block-glow');
+        const svgBlock = block as Blockly.BlockSvg;
+        if (typeof svgBlock.getSvgRoot === 'function' && svgBlock.getSvgRoot()) {
+            svgBlock.getSvgRoot().classList.add('magic-block-glow');
         }
         return code;
     };
 
-    javascriptGenerator.forBlock['move_forward'] = function (block: any) {
+    javascriptGenerator.forBlock['move_forward'] = function (block: Blockly.Block) {
         const amount = block.getFieldValue('AMOUNT');
         return `if(typeof moveForward === "function") moveForward(${amount});\n`;
     };
 
-    javascriptGenerator.forBlock['turn_right'] = function (block: any) {
+    javascriptGenerator.forBlock['turn_right'] = function (block: Blockly.Block) {
         const degrees = block.getFieldValue('DEGREES');
         return `if(typeof turnRight === "function") turnRight(${degrees});\n`;
     };
 
-    javascriptGenerator.forBlock['set_gravity'] = function (block: any) {
+    javascriptGenerator.forBlock['set_gravity'] = function (block: Blockly.Block) {
         const value = block.getFieldValue('VALUE');
         return `if(typeof setGravity === "function") setGravity(${value});\n`;
     };
 
-    javascriptGenerator.forBlock['apply_force'] = function (block: any) {
+    javascriptGenerator.forBlock['apply_force'] = function (block: Blockly.Block) {
         const target = block.getFieldValue('TARGET');
         const dir = block.getFieldValue('DIR');
         const power = block.getFieldValue('POWER');
         return `if(typeof applyForce === "function") applyForce("${target}", ${dir}, ${power});\n`;
     };
 
-    javascriptGenerator.forBlock['draw_shape'] = function (block: any) {
+    javascriptGenerator.forBlock['draw_shape'] = function (block: Blockly.Block) {
         const shape = block.getFieldValue('SHAPE');
         const x = block.getFieldValue('X');
         const y = block.getFieldValue('Y');
         return `if(typeof drawShape === "function") drawShape("${shape}", ${x}, ${y});\n`;
     };
 
-    javascriptGenerator.forBlock['explode_particles'] = function (block: any) {
+    javascriptGenerator.forBlock['explode_particles'] = function (block: Blockly.Block) {
         const count = block.getFieldValue('COUNT');
         const x = block.getFieldValue('X');
         const y = block.getFieldValue('Y');
         return `if(typeof explodeParticles === "function") explodeParticles(${count}, ${x}, ${y});\n`;
     };
 
-    javascriptGenerator.forBlock['create_sprite'] = function (block: any) {
+    javascriptGenerator.forBlock['create_sprite'] = function (block: Blockly.Block) {
         const name = block.getFieldValue('NAME');
         const x = block.getFieldValue('X');
         const y = block.getFieldValue('Y');
         return `if(typeof createSprite === "function") createSprite("${name}", ${x}, ${y});\n`;
     };
 
-    javascriptGenerator.forBlock['play_frequency'] = function (block: any) {
+    javascriptGenerator.forBlock['play_frequency'] = function (block: Blockly.Block) {
         const hz = block.getFieldValue('HZ');
         const ms = block.getFieldValue('MS');
         return `if(typeof playFrequency === "function") playFrequency(${hz}, ${ms});\n`;
     };
 
-    javascriptGenerator.forBlock['speak_block'] = function (block: any) {
+    javascriptGenerator.forBlock['speak_block'] = function (block: Blockly.Block) {
         const text = block.getFieldValue('TEXT');
         const character = block.getFieldValue('CHARACTER');
         return `if(typeof speakText === "function") speakText("${text}", "${character}");\n`;
     };
 
-    javascriptGenerator.forBlock['voice_style_block'] = function (block: any) {
+    javascriptGenerator.forBlock['voice_style_block'] = function (block: Blockly.Block) {
         const character = block.getFieldValue('CHARACTER');
         const style = block.getFieldValue('STYLE');
         return `if(typeof setVoiceStyle === "function") setVoiceStyle("${character}", "${style}");\n`;
     };
 
-    javascriptGenerator.forBlock['react_voice_block'] = function (block: any) {
+    javascriptGenerator.forBlock['react_voice_block'] = function (block: Blockly.Block) {
         const event = block.getFieldValue('EVENT');
         const prompt = block.getFieldValue('PROMPT');
         return `document.addEventListener("game_${event}", () => { if(typeof reactWithVoice === "function") reactWithVoice("${prompt}"); });\n`;
     };
 
-    javascriptGenerator.forBlock['magic_bgm_block'] = function (block: any) {
+    javascriptGenerator.forBlock['magic_bgm_block'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT');
         return `if(typeof playBGM === "function") playBGM("${prompt}");\n`;
     };
 
-    javascriptGenerator.forBlock['play_sfx_block'] = function (block: any) {
+    javascriptGenerator.forBlock['play_sfx_block'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT');
         return `if(typeof playSFX === "function") playSFX("${prompt}");\n`;
     };
 
-    javascriptGenerator.forBlock['add_score'] = function (block: any) {
+    javascriptGenerator.forBlock['add_score'] = function (block: Blockly.Block) {
         const amount = block.getFieldValue('AMOUNT');
         return `if(typeof addScore === "function") addScore(${amount});\n`;
     };
 
-    javascriptGenerator.forBlock['timer_every'] = function (block: any) {
+    javascriptGenerator.forBlock['timer_every'] = function (block: Blockly.Block) {
         const seconds = block.getFieldValue('SECONDS');
         const branch = javascriptGenerator.statementToCode(block, 'STACK') || "";
         return `setInterval(function() {\n${branch}}, ${seconds * 1000});\n`;
     };
 
-    javascriptGenerator.forBlock['when_clicked'] = function (block: any) {
+    javascriptGenerator.forBlock['when_clicked'] = function (block: Blockly.Block) {
         const branch = javascriptGenerator.statementToCode(block, 'STACK') || "";
         return `document.getElementById('app').addEventListener('click', function() {\n${branch}});\n`;
     };
 
-    javascriptGenerator.forBlock['always_loop'] = function (block: any) {
+    javascriptGenerator.forBlock['always_loop'] = function (block: Blockly.Block) {
         const branch = javascriptGenerator.statementToCode(block, 'STACK') || "";
         return `window.onFrame = function() {\n${branch}};\n`;
     };
 
-    javascriptGenerator.forBlock['text_print'] = function (block: any) {
+    javascriptGenerator.forBlock['text_print'] = function (block: Blockly.Block) {
         const msg = javascriptGenerator.valueToCode(block, 'TEXT', Order.NONE) || "''";
         return 'console.log(' + msg + ');\n';
     };

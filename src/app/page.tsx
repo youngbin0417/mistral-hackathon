@@ -55,7 +55,7 @@ export default function Home() {
       } else {
         toast.error("Failed to save API key.");
       }
-    } catch (e) {
+    } catch {
       toast.error("Error saving API key.");
     }
   };
@@ -270,7 +270,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
                 <AlertCircle className="text-[var(--neon-pink)] mb-4 animate-pulse" size={48} />
                 <h4 className="text-2xl font-bold text-white mb-2">Self-Healing in Progress</h4>
-                <p className="text-[var(--neon-pink)] text-lg italic animate-pulse">"{healingMessage}"</p>
+                <p className="text-[var(--neon-pink)] text-lg italic animate-pulse">&quot;{healingMessage}&quot;</p>
               </div>
             )}
 

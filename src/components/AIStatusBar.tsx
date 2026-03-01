@@ -26,12 +26,17 @@ export default function AIStatusBar({ isGenerating, isHealing, healingMessage }:
             const t1 = setTimeout(() => setPhase(2), 1500);
             const t2 = setTimeout(() => setPhase(3), 4000);
             return () => { clearTimeout(t1); clearTimeout(t2); };
-        } else if (phase >= 1 && phase < 4) {
-            setPhase(4);
+        } else {
+            setPhase((prev) => (prev >= 1 && prev < 4 ? 4 : prev));
+        }
+    }, [isGenerating]);
+
+    useEffect(() => {
+        if (phase === 4) {
             const t = setTimeout(() => setPhase(0), 3000);
             return () => clearTimeout(t);
         }
-    }, [isGenerating]);
+    }, [phase]);
 
     const current = isHealing
         ? { label: healingMessage || "Self-Healing...", icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />, color: "text-[var(--neon-orange)]" }

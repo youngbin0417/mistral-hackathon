@@ -4,10 +4,10 @@ import { logger } from './logger';
 // Standard interface for our cache operations
 interface CacheStore {
     get(key: string): Promise<string | null>;
-    set(key: string, value: string, ...args: any[]): Promise<any>;
-    lpush(key: string, value: string): Promise<any>;
+    set(key: string, value: string, ...args: unknown[]): Promise<unknown>;
+    lpush(key: string, value: string): Promise<unknown>;
     lrange(key: string, start: number, stop: number): Promise<string[]>;
-    ltrim(key: string, start: number, stop: number): Promise<any>;
+    ltrim(key: string, start: number, stop: number): Promise<unknown>;
 }
 
 // In-memory fallback
@@ -61,7 +61,7 @@ class CacheManager implements CacheStore {
                 }
             });
 
-            this.client.on("error", (err) => {
+            this.client.on("error", () => {
                 this.enableFallback();
                 if (!this.hasLoggedError) {
                     logger.warn("Redis connection failed. Switching to in-memory cache. Run 'docker compose up -d' in the observability folder to enable Redis.");
@@ -74,7 +74,7 @@ class CacheManager implements CacheStore {
                 this.hasLoggedError = false;
                 logger.info("Connected to Redis. Cache is now persistent.");
             });
-        } catch (e) {
+        } catch {
             this.enableFallback();
         }
     }
@@ -92,7 +92,7 @@ class CacheManager implements CacheStore {
     }
 
     async get(key: string) { return this.store.get(key); }
-    async set(key: string, value: string, ...args: any[]) { return this.store.set(key, value, ...args); }
+    async set(key: string, value: string, ...args: unknown[]) { return this.store.set(key, value, ...args); }
     async lpush(key: string, value: string) { return this.store.lpush(key, value); }
     async lrange(key: string, start: number, stop: number) { return this.store.lrange(key, start, stop); }
     async ltrim(key: string, start: number, stop: number) { return this.store.ltrim(key, start, stop); }

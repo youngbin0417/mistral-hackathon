@@ -21,7 +21,7 @@ export async function GET(req: Request) {
         const recentMagics = recentRaw.map(item => {
             try {
                 return JSON.parse(item);
-            } catch (e) {
+            } catch {
                 return null;
             }
         }).filter(item => item !== null);

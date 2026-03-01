@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { ApiErrorResponse, HealResponse } from '@/types/api';
 

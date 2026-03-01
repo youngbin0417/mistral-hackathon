@@ -1,5 +1,5 @@
 import React from 'react';
-import { Rocket, Sparkles, Zap } from 'lucide-react';
+import { Rocket, Sparkles } from 'lucide-react';
 
 interface TopNavigationProps {
     injectedLibs: string[];

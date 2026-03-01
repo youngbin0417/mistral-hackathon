@@ -16,7 +16,6 @@ export function useAiGeneration(initialCode: string) {
 
     const [injectedLibs, setInjectedLibs] = useState<string[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [aiCache, setAiCache] = useState<Record<string, AiCacheEntry>>({});
     const aiCacheRef = useRef<Record<string, AiCacheEntry>>({});
 
     const triggerAiGeneration = async (prompt: string, fullRawCode: string) => {
@@ -50,7 +49,6 @@ export function useAiGeneration(initialCode: string) {
                 }
 
                 aiCacheRef.current = updatedCache;
-                setAiCache(aiCacheRef.current);
                 if (newLibs.length > 0) setInjectedLibs(prev => Array.from(new Set([...prev, ...newLibs])));
 
                 const { processedCode } = applyCachedReplacements(fullRawCode, aiCacheRef.current);
@@ -80,7 +78,6 @@ export function useAiGeneration(initialCode: string) {
 
         if (cacheChanged) {
             aiCacheRef.current = newCache;
-            setAiCache(newCache);
         }
 
         const { processedCode, uncachedPrompts } = applyCachedReplacements(rawCode, aiCacheRef.current);

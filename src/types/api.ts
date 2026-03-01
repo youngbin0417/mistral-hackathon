@@ -1,6 +1,6 @@
 export interface ApiErrorResponse {
     error: string;
-    details?: any;
+    details?: unknown;
 }
 
 export interface GenerateRequest {

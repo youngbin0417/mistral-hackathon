@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
         const resp: ConfigPostResponse = { success: true };
         return NextResponse.json(resp);
-    } catch (e: unknown) {
+    } catch {
         const errResp: ApiErrorResponse = { error: "Failed to save API key" };
         return NextResponse.json(errResp, { status: 500 });
     }

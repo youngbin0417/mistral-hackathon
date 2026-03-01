@@ -1,3 +1,4 @@
 import { TextEncoder, TextDecoder } from 'util';
-Object.assign(global, { TextDecoder, TextEncoder });
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as any;
 import '@testing-library/jest-dom';

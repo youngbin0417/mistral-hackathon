@@ -1,5 +1,5 @@
 import * as Blockly from 'blockly/core';
-import { javascriptGenerator, Order } from 'blockly/javascript';
+import { javascriptGenerator } from 'blockly/javascript';
 import { initializeCustomBlocks } from '@/lib/customBlocks';
 
 describe('Custom Blocks Integration', () => {
