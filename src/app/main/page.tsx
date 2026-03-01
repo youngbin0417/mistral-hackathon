@@ -383,8 +383,11 @@ export default function Home() {
 <html>
 <head>
   <meta charset="UTF-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <style>
-    body, html { margin: 0; padding: 0; background: #000000; color: #F3ECE5; width: 100%; height: 100%; overflow: hidden; font-family: monospace; }
+    body, html { margin: 0; padding: 0; background: #1a1a1e; color: #F3ECE5; width: 100%; height: 100%; overflow: hidden; font-family: Fredoka, sans-serif; }
     #app { width: 100%; height: 100%; position: relative; }
     canvas { display: block; }
   </style>
@@ -394,12 +397,25 @@ export default function Home() {
   <script>
     ${RUNTIME_CODE}
   </script>
-  <script type="module">
+  <script>
+    // Error handling to communicate back to parent frame for self-healing
     window.addEventListener('error', (e) => {
       console.error('Runtime Error:', e.message);
       window.parent.postMessage({ type: 'error', message: e.message }, '*');
     });
-    ${code}
+
+    // Strip out all ESM imports from the code as we are loading via script tags
+    const cleanCode = \`${code.replace(/import\s+[\s\S]+?from\s+['"].+?['"];?\n?/g, '')}\`;
+
+    // Execute the code. Since we want setup() and draw() to be global for p5,
+    // we use a regular script tag/eval approach or just wrap in an async function.
+    try {
+        const script = document.createElement('script');
+        script.text = cleanCode;
+        document.body.appendChild(script);
+    } catch (err) {
+        console.error('Execution Error:', err);
+    }
   </script>
 </body>
 </html>`}

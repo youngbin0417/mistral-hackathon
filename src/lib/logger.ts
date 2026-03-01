@@ -1,25 +1,12 @@
 import pino from 'pino';
-import path from 'path';
-import fs from 'fs';
 
-// Ensure logs directory exists
-const logDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir, { recursive: true });
-}
-
+// Basic logger setup for stdout/pino-pretty only to avoid permission issues.
 export const logger = pino({
-    level: process.env.LOG_LEVEL || 'debug',
+    level: process.env.LOG_LEVEL || 'info',
     transport: {
         targets: [
             {
-                target: 'pino/file',
-                options: {
-                    destination: path.join(logDir, 'app.log'),
-                },
-            },
-            {
-                target: 'pino-pretty', // also output to console nicely during dev
+                target: 'pino-pretty', // default for hackathon/dev
                 options: {
                     colorize: true,
                 },

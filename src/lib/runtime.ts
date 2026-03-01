@@ -14,18 +14,46 @@ export const RUNTIME_CODE = `
 
     // ── Audio ────────────────────────────────────────────────────────────
     window.playBGM = (mood) => {
-        if (window.bgmAudio) { window.bgmAudio.pause(); }
+        if (window.bgmAudio) { 
+            if (window.bgmAudio.osc) { 
+                window.bgmAudio.osc.stop(); 
+                window.bgmAudio.ctx.close();
+            } else {
+                window.bgmAudio.pause(); 
+            }
+        }
         try {
-            // Priority: Local file -> Placeholder or Synthetic tone fallback
             const src = '/audio/' + mood + '.mp3';
             window.bgmAudio = new Audio(src);
             window.bgmAudio.loop = true;
             window.bgmAudio.volume = 0.4;
             
             window.bgmAudio.play().catch(e => {
-                console.warn('BGM file missing or blocked:', mood);
-                // Fallback: Just play a subtle frequency to indicate BGM requested
-                window.playFrequency(mood === 'tense' ? 110 : 220, 100);
+                console.warn('BGM file missing, using Synth Drone:', mood);
+                // Better Fallback: Create a synth drone loop
+                const actx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = actx.createOscillator();
+                const g = actx.createGain();
+                
+                const frequencies = {
+                    tense: 55,       // A1
+                    peaceful: 220,   // A3
+                    exciting: 440,   // A4
+                    mysterious: 110  // A2
+                };
+                
+                osc.type = mood === 'tense' ? 'sawtooth' : 'sine';
+                osc.frequency.setValueAtTime(frequencies[mood] || 110, actx.currentTime);
+                g.gain.setValueAtTime(0.05, actx.currentTime); // Very quiet
+                
+                osc.connect(g);
+                g.connect(actx.destination);
+                osc.start();
+                
+                window.bgmAudio = { 
+                    pause: () => { osc.stop(); actx.close(); },
+                    osc, ctx: actx
+                };
             });
         } catch(e) { console.error('BGM error', e); }
     };
@@ -286,13 +314,30 @@ export const RUNTIME_CODE = `
                 ctx.save();
                 ctx.translate(e.x, e.y);
                 ctx.rotate(e.angle);
-                ctx.fillStyle = e.color || '#00e5ff';
-                ctx.beginPath();
-                ctx.moveTo(15, 0);
-                ctx.lineTo(-10, 10);
-                ctx.lineTo(-10, -10);
-                ctx.closePath();
-                ctx.fill();
+                
+                // Draw Sprite (Image or Triangle)
+                if (!window._assetCache) window._assetCache = {};
+                const nameKey = (name || 'Hero').toLowerCase();
+                const src = '/images/' + nameKey + '.png';
+                
+                if (window._assetCache[nameKey] === undefined) {
+                    const img = new Image();
+                    img.src = src;
+                    img.onload = () => { window._assetCache[nameKey] = img; };
+                    img.onerror = () => { window._assetCache[nameKey] = null; };
+                }
+                
+                if (window._assetCache[nameKey]) {
+                    ctx.drawImage(window._assetCache[nameKey], -15, -15, 30, 30);
+                } else {
+                    ctx.fillStyle = e.color || '#00e5ff';
+                    ctx.beginPath();
+                    ctx.moveTo(15, 0);
+                    ctx.lineTo(-10, 10);
+                    ctx.lineTo(-10, -10);
+                    ctx.closePath();
+                    ctx.fill();
+                }
                 ctx.restore();
 
                 if (e.speaking) {
