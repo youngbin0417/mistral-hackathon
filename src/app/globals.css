@@ -387,3 +387,33 @@ pre,
 .blocklyMarker {
     display: none !important;
 }
+
+/* --- Clean Up Blockly Trash & Zoom (CLI Aesthetic) --- */
+.blocklyZoom,
+.blocklyTrash {
+    opacity: 0.3 !important;
+    filter: grayscale(100%) contrast(120%) !important;
+    transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease !important;
+}
+
+.blocklyZoom:hover,
+.blocklyTrash:hover {
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+.blocklyTrash {
+    transform: scale(0.65) !important;
+    transform-origin: center !important;
+    transform-box: fill-box !important;
+}
+
+.blocklyZoom rect,
+.blocklyZoom circle,
+.blocklyTrash rect,
+.blocklyTrash circle {
+    fill: #111111 !important;
+    stroke: #F3ECE5 !important;
+    stroke-opacity: 0.2 !important;
+    stroke-width: 1px !important;
+}
