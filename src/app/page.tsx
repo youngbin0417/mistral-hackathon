@@ -90,7 +90,7 @@ export default function Home() {
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [handleHeal]);
+  }, [handleHeal, isHealing, lastError]);
 
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);

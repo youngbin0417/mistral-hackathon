@@ -47,7 +47,7 @@ Do NOT include any code blocks, markdown formatting, or complex terms. Keep it v
             ]
         });
 
-        let explanation = chatResponse.choices?.[0]?.message?.content || "설명을 생성하지 못했어요.";
+        const explanation = chatResponse.choices?.[0]?.message?.content || "설명을 생성하지 못했어요.";
 
         return NextResponse.json({ explanation });
     } catch (error: unknown) {
