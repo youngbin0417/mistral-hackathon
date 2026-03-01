@@ -29,7 +29,10 @@ export async function POST(req: Request) {
 
         logger.info("[AI Explain] Requesting explanation from Mistral API");
 
-        const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const client = new Mistral({
+            apiKey: process.env.MISTRAL_API_KEY,
+            serverURL: process.env.MISTRAL_API_URL || undefined
+        });
 
         const SYSTEM_PROMPT = `You are a friendly coding mentor. 
 The user is learning to code using a visual block editor.

@@ -45,7 +45,10 @@ export async function POST(req: Request) {
             logger.warn({ err: redisErr }, `[AI Backend] Redis cache lookup failed, treating as cache miss`);
         }
 
-        const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const client = new Mistral({
+            apiKey: process.env.MISTRAL_API_KEY,
+            serverURL: process.env.MISTRAL_API_URL || undefined
+        });
 
         const SYSTEM_PROMPT = `You are a professional creative coder. 
 The user will provide a prompt for a visual or interactive effect. 

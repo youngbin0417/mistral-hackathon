@@ -33,7 +33,8 @@ export async function POST(req: Request) {
         }
 
         // We use ElevenLabs Text to Sound Effects API
-        const response = await fetch(`https://api.elevenlabs.io/v1/sound-generation`, {
+        const baseUrl = process.env.ELEVENLABS_API_URL || 'https://api.elevenlabs.io/v1';
+        const response = await fetch(`${baseUrl}/sound-generation`, {
             method: 'POST',
             headers: {
                 'Accept': 'audio/mpeg',
