@@ -7,7 +7,7 @@ import * as En from 'blockly/msg/en';
 import { javascriptGenerator, Order } from 'blockly/javascript';
 import DarkTheme from '@blockly/theme-dark';
 import { initializeCustomBlocks } from '@/lib/customBlocks';
-import { Sparkles, Palette, Globe, Volume2, Gamepad2, Brain, Calculator } from 'lucide-react';
+import { Sparkles, Palette, Globe, Volume2, Gamepad2, Brain, Calculator, Mic } from 'lucide-react';
 
 Blockly.setLocale(En as any);
 
@@ -48,6 +48,7 @@ const CyberpunkTheme = Blockly.Theme.defineTheme('cyberpunk', {
 // Category definitions for our custom palette bar
 const CATEGORIES = [
   { id: 'ai_magic', label: 'AI Magic', icon: Sparkles, color: '#ff00c8', borderColor: 'border-[#ff00c8]/30', bgColor: 'bg-[#ff00c8]/10', textColor: 'text-[#ff00c8]' },
+  { id: 'voice', label: 'Voice', icon: Mic, color: '#ff0066', borderColor: 'border-[#ff0066]/30', bgColor: 'bg-[#ff0066]/10', textColor: 'text-[#ff0066]' },
   { id: 'visuals', label: 'Visuals', icon: Palette, color: '#ff0066', borderColor: 'border-[#ff0066]/30', bgColor: 'bg-[#ff0066]/10', textColor: 'text-[#ff0066]' },
   { id: 'world', label: 'World', icon: Globe, color: '#9000ff', borderColor: 'border-[#9000ff]/30', bgColor: 'bg-[#9000ff]/10', textColor: 'text-[#9000ff]' },
   { id: 'audio', label: 'Audio', icon: Volume2, color: '#FFBF00', borderColor: 'border-[#FFBF00]/30', bgColor: 'bg-[#FFBF00]/10', textColor: 'text-[#FFBF00]' },
@@ -62,6 +63,11 @@ const TOOLBOX_XML = `
     <block type="magic_block"></block>
     <block type="magic_condition"></block>
     <block type="magic_styles"></block>
+  </category>
+  <category name="Voice" colour="#ff0066">
+    <block type="speak_block"></block>
+    <block type="voice_style_block"></block>
+    <block type="react_voice_block"></block>
   </category>
   <category name="Visuals" colour="#ff0066">
     <block type="draw_shape"></block>

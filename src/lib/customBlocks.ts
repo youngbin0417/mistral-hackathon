@@ -151,6 +151,70 @@ export function initializeCustomBlocks() {
         }
     };
 
+    // === 6. ElevenLabs Voice ===
+    Blockly.Blocks['speak_block'] = {
+        init: function () {
+            this.jsonInit({
+                "message0": "🎙️ Speak %1 as %2",
+                "args0": [
+                    { "type": "field_input", "name": "TEXT", "text": "Hello World!" },
+                    { "type": "field_input", "name": "CHARACTER", "text": "Hero" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": "#ff0066",
+                "tooltip": "ElevenLabs TTS"
+            });
+        }
+    };
+
+    Blockly.Blocks['voice_style_block'] = {
+        init: function () {
+            this.jsonInit({
+                "message0": "🎙️ Set Voice Style of %1 to %2",
+                "args0": [
+                    { "type": "field_input", "name": "CHARACTER", "text": "Hero" },
+                    {
+                        "type": "field_dropdown",
+                        "name": "STYLE",
+                        "options": [
+                            ["Cute", "cute"],
+                            ["Scary", "scary"],
+                            ["Robot", "robot"],
+                            ["Default", "default"]
+                        ]
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": "#ff0066"
+            });
+        }
+    };
+
+    Blockly.Blocks['react_voice_block'] = {
+        init: function () {
+            this.jsonInit({
+                "message0": "🎙️ When %1 : React with Voice %2",
+                "args0": [
+                    {
+                        "type": "field_dropdown",
+                        "name": "EVENT",
+                        "options": [
+                            ["Player takes damage", "damage"],
+                            ["Enemy is defeated", "defeat"],
+                            ["Game starts", "start"]
+                        ]
+                    },
+                    { "type": "field_input", "name": "PROMPT", "text": "Ouch! That hurts!" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": "#ff0066"
+            });
+        }
+    };
+
     // === 4. Audio & Sensors ===
     Blockly.Blocks['play_frequency'] = {
         init: function () {
@@ -298,6 +362,24 @@ function registerGenerators() {
         const hz = block.getFieldValue('HZ');
         const ms = block.getFieldValue('MS');
         return `if(typeof playFrequency === "function") playFrequency(${hz}, ${ms});\n`;
+    };
+
+    javascriptGenerator.forBlock['speak_block'] = function (block: any) {
+        const text = block.getFieldValue('TEXT');
+        const character = block.getFieldValue('CHARACTER');
+        return `if(typeof speakText === "function") speakText("${text}", "${character}");\n`;
+    };
+
+    javascriptGenerator.forBlock['voice_style_block'] = function (block: any) {
+        const character = block.getFieldValue('CHARACTER');
+        const style = block.getFieldValue('STYLE');
+        return `if(typeof setVoiceStyle === "function") setVoiceStyle("${character}", "${style}");\n`;
+    };
+
+    javascriptGenerator.forBlock['react_voice_block'] = function (block: any) {
+        const event = block.getFieldValue('EVENT');
+        const prompt = block.getFieldValue('PROMPT');
+        return `document.addEventListener("game_${event}", () => { if(typeof reactWithVoice === "function") reactWithVoice("${prompt}"); });\n`;
     };
 
     javascriptGenerator.forBlock['add_score'] = function (block: any) {

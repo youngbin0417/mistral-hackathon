@@ -149,6 +149,36 @@ export default function Home() {
   <script>
     // --- SNAP & BUILD RUNTIME ---
     window.entities = {};
+    window.voiceStyles = {};
+    window.setVoiceStyle = (character, style) => { window.voiceStyles[character] = style; };
+    window.speakText = async (text, character) => {
+        const style = window.voiceStyles[character] || 'default';
+        let voiceId = '21m00Tcm4TlvDq8ikWAM';
+        if (style === 'cute') voiceId = 'EXAVITQu4vr4xnSDxMaL';
+        if (style === 'scary') voiceId = 'bVMeCyTHy58xNoL34h3p';
+        if (style === 'robot') voiceId = 'VR6AewLTigWG4xSOukaG';
+        try {
+            const res = await fetch('/api/speak', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, voiceId })
+            });
+            if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio(url);
+                audio.play();
+                if (window.entities[character]) {
+                    window.entities[character].speaking = text;
+                    audio.onended = () => { window.entities[character].speaking = null; };
+                }
+            } else {
+                console.error("TTS failed");
+            }
+        } catch(e) { console.error("Audio error", e); }
+    };
+    window.reactWithVoice = (prompt) => window.speakText(prompt, 'Hero');
+
     window.createSprite = (name, x, y) => {
         if (!window.entities[name]) {
             console.log("Creating entity:", name);
@@ -197,6 +227,21 @@ export default function Home() {
                 ctx.font = '10px monospace';
                 ctx.fillText(name, -10, 25);
                 ctx.restore();
+                
+                if (e.speaking) {
+                    ctx.save();
+                    ctx.translate(e.x, e.y - 30);
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    if(ctx.roundRect) ctx.roundRect(-50, -30, 100, 20, 5);
+                    else ctx.rect(-50, -30, 100, 20);
+                    ctx.fill();
+                    ctx.fillStyle = '#000';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(e.speaking.substring(0, 15) + (e.speaking.length > 15 ? '...' : ''), 0, -16);
+                    ctx.restore();
+                }
             });
         }
         requestAnimationFrame(draw);
@@ -267,7 +312,7 @@ export default function Home() {
             <iframe
               className="w-full h-full border-none bg-[var(--background)]"
               title="Magic Preview"
-              sandbox="allow-scripts allow-modals"
+              sandbox="allow-scripts allow-modals allow-same-origin"
               srcDoc={`
                 <!DOCTYPE html>
                 <html>
@@ -284,6 +329,36 @@ export default function Home() {
                   <script>
                     // --- SNAP & BUILD RUNTIME ---
                     window.entities = {};
+                    window.voiceStyles = {};
+                    window.setVoiceStyle = (character, style) => { window.voiceStyles[character] = style; };
+                    window.speakText = async (text, character) => {
+                        const style = window.voiceStyles[character] || 'default';
+                        let voiceId = '21m00Tcm4TlvDq8ikWAM';
+                        if (style === 'cute') voiceId = 'EXAVITQu4vr4xnSDxMaL';
+                        if (style === 'scary') voiceId = 'bVMeCyTHy58xNoL34h3p';
+                        if (style === 'robot') voiceId = 'VR6AewLTigWG4xSOukaG';
+                        try {
+                            const res = await fetch('/api/speak', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ text, voiceId })
+                            });
+                            if (res.ok) {
+                                const blob = await res.blob();
+                                const url = URL.createObjectURL(blob);
+                                const audio = new Audio(url);
+                                audio.play();
+                                if (window.entities[character]) {
+                                    window.entities[character].speaking = text;
+                                    audio.onended = () => { window.entities[character].speaking = null; };
+                                }
+                            } else {
+                                console.error("TTS failed");
+                            }
+                        } catch(e) { console.error("Audio error", e); }
+                    };
+                    window.reactWithVoice = (prompt) => window.speakText(prompt, 'Hero');
+
                     window.createSprite = (name, x, y) => {
                         if (!window.entities[name]) {
                             window.entities[name] = { x, y, angle: 0, color: '#00e5ff' };
@@ -335,6 +410,21 @@ export default function Home() {
                                 ctx.textAlign = 'center';
                                 ctx.fillText(name, 0, 40);
                                 ctx.restore();
+
+                                if (e.speaking) {
+                                    ctx.save();
+                                    ctx.translate(e.x, e.y - 30);
+                                    ctx.fillStyle = '#fff';
+                                    ctx.beginPath();
+                                    if(ctx.roundRect) ctx.roundRect(-50, -30, 100, 20, 5);
+                                    else ctx.rect(-50, -30, 100, 20);
+                                    ctx.fill();
+                                    ctx.fillStyle = '#000';
+                                    ctx.font = 'bold 10px monospace';
+                                    ctx.textAlign = 'center';
+                                    ctx.fillText(e.speaking.substring(0, 15) + (e.speaking.length > 15 ? '...' : ''), 0, -16);
+                                    ctx.restore();
+                                }
                             });
                         }
                         requestAnimationFrame(draw);

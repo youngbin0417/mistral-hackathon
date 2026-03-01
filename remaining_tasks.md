@@ -7,15 +7,28 @@
     - Expand detection to include `p5.sound` and `p5.dom`.
 
 ## 2. Infrastructure & Scale (P1)
-- [ ] **Redis Deployment (Production)**:
+- [x] **Redis Deployment (Production)**: ✅ Complete
     - Setup managed Upstash Redis for global consistency.
-- [ ] **Grafana Dashboards**:
+- [x] **Grafana Dashboards**: ✅ Complete
     - Create custom dashboard JSON for tracking Mistral token usage and error rates.
 
 ## 3. Demo Scenario Verification (P0)
 - [x] **Scenario A: Rainbow Trail**: ✅ Verified
 - [x] **Scenario B: Physics Leap**: ✅ Verified
 - [x] **Scenario C: Event Handling**: ✅ Verified
+
+## 4. 🎙️ ElevenLabs Voice Blocks (New Proposal)
+- [x] **Speak Block**: ElevenLabs TTS API integration & text-to-speech bubble synchronization.
+- [x] **Voice Style Block**: Dynamic ElevenLabs `voice_id` switching based on character logic.
+- [x] **React with Voice / NPC Dialog**: Event trigger to TTS generation via Mistral.
+
+## 5. 🎵 AI Audio Engine Blocks (New Proposal)
+- [ ] **Magic BGM Block**: Mistral prompt sequence to generate `p5.sound` parameters (BPM, scales, instruments).
+- [ ] **Adaptive Sound / SFX Generator**: Logic generation for game-state reactive audio and oscillator combination.
+
+## 6. 🧠 Meta-Programming Blocks (New Proposal)
+- [ ] **Debug Explain**: Auto-catch Sandpack errors, explain via Mistral, and output via ElevenLabs.
+- [ ] **Remix Code / Add Feature**: Direct source code modification via Codestral diff.
 
 ---
 
@@ -32,3 +45,7 @@
 | AI Monitoring (Loki/Grafana) | ✅ Complete |
 | High-Speed Cache (Redis) | ✅ Complete |
 | Unit Test (100% Core Coverage) | ✅ Complete |
+| Blockly Toolbox Removal | ✅ Complete |
+| UI Stability & Dark Mode Fixes | ✅ Complete |
+| Redis Log Integration | ✅ Complete |
+| Event Blocks (When Clicked, Always) | ✅ Complete |
