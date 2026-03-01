@@ -15,6 +15,7 @@ import {
   Sparkles,
   MonitorPlay
 } from 'lucide-react';
+import MistralCat from '@/components/MistralCat';
 
 export default function IntroPage() {
   const [mounted, setMounted] = useState(false);
@@ -48,7 +49,7 @@ export default function IntroPage() {
             <Terminal className="w-6 h-6" strokeWidth={2.5} />
           </div>
           <div className="hidden sm:block">
-            <span className="text-xl font-bold tracking-tight text-[#F3ECE5]">snap_build</span>
+            <span className="text-xl font-bold tracking-tight text-[#F3ECE5]">blockstral</span>
           </div>
         </Link>
         <div className="flex items-center gap-6 text-sm font-mono text-[#F3ECE5]/60">
@@ -67,7 +68,7 @@ export default function IntroPage() {
         {/* CLI Hero Section */}
         <section className="max-w-5xl mx-auto px-8 text-left mb-32">
           <div className="font-mono text-[#FD5A1E] mb-6 flex items-center gap-2">
-            <span className="text-sm">system@mistral:~$ ./run_snap_build.sh</span>
+            <span className="text-sm">system@mistral:~$ ./run_blockstral.sh</span>
           </div>
 
           <h1 className="text-5xl md:text-8xl font-medium mb-8 tracking-tight leading-[1]">
@@ -199,7 +200,7 @@ export default function IntroPage() {
 
         {/* Final CTA */}
         <section className="max-w-4xl mx-auto px-8 py-40 text-center">
-          <Terminal className="w-16 h-16 mx-auto text-[#FD5A1E] mb-8 opacity-80" />
+          <MistralCat size="large" className="text-[#FD5A1E] opacity-90 mb-12" />
           <h2 className="text-4xl md:text-6xl font-medium mb-8">Ready to compile?</h2>
           <Link
             href="/main"
@@ -217,7 +218,7 @@ export default function IntroPage() {
         <div className="max-w-7xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-[#F3ECE5]/40">
           <div className="flex items-center gap-2 text-[#F3ECE5]">
             <Terminal size={16} className="text-[#FD5A1E]" />
-            <span className="font-bold">snap_build</span>
+            <span className="font-bold">blockstral</span>
           </div>
           <p>© 2026 Powered by Mistral AI. Hackathon Project.</p>
           <div className="flex gap-6">

@@ -15,7 +15,7 @@ export default function TopNavigation({ injectedLibs, isGenerating }: TopNavigat
                 </div>
                 <div>
                     <h1 className="text-lg font-bold tracking-tight text-[#F3ECE5]">
-                        snap_build
+                        blockstral
                     </h1>
                     <p className="text-[10px] text-gray-500 font-medium tracking-widest uppercase">
                         system@mistral

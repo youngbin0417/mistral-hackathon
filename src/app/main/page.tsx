@@ -11,6 +11,7 @@ import ApiSetupModal from '@/components/ApiSetupModal';
 import TopNavigation from '@/components/TopNavigation';
 import AIStatusBar from '@/components/AIStatusBar';
 import SelfHealer from '@/components/SelfHealer';
+import MistralCat from '@/components/MistralCat';
 import { useAiGeneration } from '@/hooks/useAiGeneration';
 import { useSelfHealer } from '@/hooks/useSelfHealer';
 import { SANDPACK_LIBRARIES } from '@/config/constants';
@@ -304,8 +305,8 @@ export default function Home() {
                             <div className="min-h-[80px] flex items-center justify-center">
                                 {isExplaining ? (
                                     <div className="flex flex-col items-center gap-3">
-                                        <Sparkles className="w-6 h-6 text-[#FD5A1E] animate-spin" />
-                                        <p className="text-sm text-[#F3ECE5]/40">Analyzing instructions...</p>
+                                        <MistralCat size="small" className="text-[#FD5A1E] mb-2" />
+                                        <p className="text-sm text-[#F3ECE5]/40 animate-pulse">Analyzing instructions...</p>
                                     </div>
                                 ) : (
                                     <p className="text-sm leading-relaxed text-[#F3ECE5]/80 font-sans">{explanation}</p>
@@ -358,10 +359,8 @@ export default function Home() {
                         {isPreviewLoading && (
                             <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black font-mono">
                                 <div className="text-[#FD5A1E] flex flex-col items-center">
-                                    <div className="w-16 h-1 border-t border-b border-[#FD5A1E]/30 relative mb-4">
-                                        <div className="absolute inset-y-0 left-0 bg-[#FD5A1E] w-1/3 animate-ping" />
-                                    </div>
-                                    <p className="text-sm font-bold tracking-widest uppercase">Initializing_Magic_Sequence</p>
+                                    <MistralCat size="large" className="mb-8" />
+                                    <p className="text-sm font-bold tracking-widest uppercase animate-pulse">Initializing_Magic_Sequence</p>
                                     <p className="text-[#F3ECE5]/40 text-xs mt-2">Compiling instructions...</p>
                                 </div>
                             </div>

@@ -1,6 +1,6 @@
-# Mistral Snap & Build 🚀
+# 🧶 Blockstral: Vibe Coding with Mistral
 
-**Mistral Snap & Build** is an AI-native block coding platform designed for the next generation of creators. Powered by Mistral AI (Codestral), it enables children to build complex interactive worlds using natural language. Watch characters talk, interact, and explain their own logic in simple, friendly English.
+**Blockstral** is an AI-native block coding platform designed for the next generation of creators. Powered by Mistral AI (Codestral), it enables children to build complex interactive worlds using natural language. Watch characters talk, interact, and explain their own logic in simple, friendly English.
 
 ## 🌟 Key Features
 

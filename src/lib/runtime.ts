@@ -1,7 +1,7 @@
 /**
  * runtime.js
  *
- * Shared Snap & Build runtime for both Sandpack environment and Fullscreen preview.
+ * Shared Blockstral runtime for both Sandpack environment and Fullscreen preview.
  * ALL functions referenced by customBlocks.ts generators must be defined here.
  */
 

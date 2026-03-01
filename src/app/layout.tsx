@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mistral Snap",
+  title: "Blockstral",
   description: "AI-powered visual programming workspace",
 };
 
