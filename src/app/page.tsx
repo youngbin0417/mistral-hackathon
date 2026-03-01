@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SandpackProvider, SandpackLayout, SandpackCodeEditor } from "@codesandbox/sandpack-react";
-import { Play, X, Sparkles, AlertCircle, Maximize2 } from "lucide-react";
+import { Play, X, Sparkles, AlertCircle, Blocks, Copy, Check } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 import toast, { Toaster } from 'react-hot-toast';
@@ -64,6 +64,40 @@ export default function Home() {
   const { isHealing, healingMessage, lastError, handleHeal } = useSelfHealer(codeRef, setCode);
 
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const previewLoadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openPreview = () => {
+    setIsPreviewLoading(true);
+    setIsPreviewModalOpen(true);
+    // Always show loader for at least 800ms, then hide it
+    if (previewLoadTimerRef.current) clearTimeout(previewLoadTimerRef.current);
+    previewLoadTimerRef.current = setTimeout(() => {
+      setIsPreviewLoading(false);
+      previewLoadTimerRef.current = null;
+    }, 800);
+  };
+
+  const handleIframeLoad = () => {
+    // If the 800ms timer already expired, nothing to do (loader already hidden)
+    // If it's still pending, clear it and hide immediately — iframe is ready
+    if (previewLoadTimerRef.current) {
+      clearTimeout(previewLoadTimerRef.current);
+      previewLoadTimerRef.current = null;
+      setIsPreviewLoading(false);
+    }
+  };
+
+  const hasCode = code.trim().length > 0;
+
+  const [isCopied, setIsCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setIsCopied(true);
+      toast.success('Code copied!');
+      setTimeout(() => setIsCopied(false), 2000);
+    });
+  };
 
   return (
     <div className="flex flex-col h-[100dvh] bg-[var(--background)] text-[var(--foreground)] overflow-hidden">
@@ -113,17 +147,21 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setIsPreviewModalOpen(true)}
+                    onClick={() => openPreview()}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--neon-cyan)] to-[var(--neon-purple)] text-[var(--background)] text-sm font-bold glow-cyan hover:opacity-90 transition-opacity active:scale-95"
                   >
                     <Play size={14} fill="currentColor" />
                     Run Magic
                   </button>
+                  {/* Copy button */}
                   <button
-                    onClick={() => setIsPreviewModalOpen(true)}
+                    onClick={handleCopy}
+                    title="Copy code"
                     className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
                   >
-                    <Maximize2 className="w-3.5 h-3.5 text-gray-500" />
+                    {isCopied
+                      ? <Check className="w-3.5 h-3.5 text-[var(--neon-green)]" />
+                      : <Copy className="w-3.5 h-3.5 text-gray-500" />}
                   </button>
                 </div>
               </div>
@@ -158,12 +196,12 @@ export default function Home() {
                     dependencies: SANDPACK_LIBRARIES
                   }}
                 >
-                  <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', flex: 1, display: 'flex' }}>
+                  <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', display: 'flex', flexDirection: 'column' }}>
                     <SandpackCodeEditor
                       readOnly={true}
                       showTabs={false}
                       showLineNumbers={true}
-                      style={{ flex: 1, minHeight: "100%", minWidth: "100%", border: 'none' }}
+                      style={{ flex: 1, height: "100%", border: 'none', overflow: 'auto' }}
                     />
                   </SandpackLayout>
 
@@ -197,7 +235,37 @@ export default function Home() {
             </button>
           </div>
           {/* Modal Body */}
-          <div className="w-full max-w-6xl aspect-video bg-[var(--background)] border border-t-0 border-[var(--neon-cyan)]/30 rounded-b-2xl overflow-hidden relative glow-cyan">
+          <div className="w-full max-w-6xl aspect-video bg-[#0d0d14] border border-t-0 border-[var(--neon-cyan)]/30 rounded-b-2xl overflow-hidden relative glow-cyan">
+
+            {/* Empty state — no blocks dragged yet */}
+            {!hasCode && !isPreviewLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-[var(--neon-cyan)]/10 border border-[var(--neon-cyan)]/20 flex items-center justify-center">
+                  <Blocks className="w-8 h-8 text-[var(--neon-cyan)]/50" />
+                </div>
+                <div className="text-center">
+                  <p className="text-gray-400 font-semibold">No blocks yet</p>
+                  <p className="text-gray-600 text-sm mt-1">Drag some blocks onto the workspace first</p>
+                </div>
+              </div>
+            )}
+
+            {/* Loading overlay */}
+            {isPreviewLoading && (
+              <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#0d0d14]">
+                <div className="relative flex items-center justify-center mb-6">
+                  {/* Outer spinning ring */}
+                  <div className="w-20 h-20 rounded-full border-4 border-[var(--neon-cyan)]/20 border-t-[var(--neon-cyan)] animate-spin" />
+                  {/* Inner pulsing dot */}
+                  <div className="absolute w-8 h-8 rounded-full bg-[var(--neon-cyan)]/20 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-full bg-[var(--neon-cyan)] animate-pulse" />
+                  </div>
+                </div>
+                <p className="text-[var(--neon-cyan)] text-sm font-semibold tracking-widest uppercase animate-pulse">Initializing Magic...</p>
+                <p className="text-gray-600 text-xs mt-1">Running your blocks</p>
+              </div>
+            )}
+
             {isHealing && (
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
                 <AlertCircle className="text-[var(--neon-pink)] mb-4 animate-pulse" size={48} />
@@ -207,37 +275,34 @@ export default function Home() {
             )}
 
             <iframe
-              className="w-full h-full border-none bg-[var(--background)]"
+              className="w-full h-full border-none"
               title="Magic Preview"
               sandbox="allow-scripts allow-modals allow-same-origin"
-              srcDoc={`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                  <meta charset="UTF-8">
-                  <style>
-                    body, html { margin: 0; padding: 0; background: #0d0d14; color: #fff; width: 100%; height: 100%; overflow: hidden; }
-                    #app { width: 100%; height: 100%; position: relative; }
-                    canvas { display: block; }
-                  </style>
-                </head>
-                <body>
-                  <div id="app"></div>
-                  <script>
-                        canvas.width = window.innerWidth;
-                        canvas.height = window.innerHeight;
-                    });
-                  </script>
-                  <script type="module">
-                    window.addEventListener('error', (e) => {
-                      console.error("Runtime Error:", e.message);
-                      window.parent.postMessage({ type: 'error', message: e.message }, '*');
-                    });
-                    ${code}
-                  </script>
-                </body>
-                </html>
-              `}
+              onLoad={handleIframeLoad}
+              srcDoc={`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body, html { margin: 0; padding: 0; background: #0d0d14; color: #fff; width: 100%; height: 100%; overflow: hidden; }
+    #app { width: 100%; height: 100%; position: relative; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    ${RUNTIME_CODE}
+  </script>
+  <script type="module">
+    window.addEventListener('error', (e) => {
+      console.error('Runtime Error:', e.message);
+      window.parent.postMessage({ type: 'error', message: e.message }, '*');
+    });
+    ${code}
+  </script>
+</body>
+</html>`}
             />
           </div>
         </div>
