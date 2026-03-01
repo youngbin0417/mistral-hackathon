@@ -11,13 +11,9 @@
 # testing
 /coverage
 # Test output logs
-jest_output.txt
-output.test.txt
-output2.txt
-out2.txt
-out3.txt
-
-
+*.txt
+output.json
+*.log
 # next.js
 /.next/
 /out/
