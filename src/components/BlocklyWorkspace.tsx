@@ -246,6 +246,15 @@ export default function BlocklyWorkspace({ onCodeChange, isGenerating = false }:
 
       <div className={`flex-1 relative overflow-hidden ${isGenerating ? 'blockly-generating' : ''}`}>
         <div ref={blocklyDiv} className="absolute inset-0 w-full h-full blockly-workspace-container" />
+
+        {isGenerating && (
+          <div className="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px] pointer-events-none">
+            <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-black/80 border border-[var(--neon-pink)]/30 shadow-[0_0_20px_rgba(255,0,200,0.2)]">
+              <Sparkles className="w-5 h-5 text-[var(--neon-pink)] animate-spin" />
+              <span className="text-[var(--neon-pink)] font-bold tracking-widest text-sm uppercase">AI Magic in Progress...</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <style jsx global>{`

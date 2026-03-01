@@ -20,7 +20,7 @@ export interface AiCacheEntry {
  * This regex accounts for that by allowing optional whitespace before the comment and the console.log line.
  */
 export const AI_MARKER_REGEX =
-    /\n?[ \t]*\/\* ✨ AI Request: "([\s\S]+?)" \*\/\n[ \t]*\{ console\.log\('AI_MAGIC_[A-Z_]+: [\s\S]+?'\); \}\n?/g;
+    /\n?[ \t]*\/\* ✨ AI Request: "([\s\S]+?)" \*\/\n?(?:[ \t]*\{ console\.log\('AI_MAGIC_[A-Z_]+: [\s\S]+?'\); \}\n?|[ \t]*\([\s\S]+?\))/g;
 
 /**
  * Extract all AI Magic Block prompts from raw Blockly-generated code.
@@ -74,16 +74,27 @@ export function applyCachedReplacements(
  */
 export function prependImports(sourceCode: string, libs: string[]): string {
     let imports = '';
-    if (libs.includes('p5') && !sourceCode.includes("esm.sh/p5@")) {
+    const libsToImport = new Set(libs);
+
+    if (libsToImport.has('p5') && !sourceCode.includes("esm.sh/p5@")) {
         imports += `import p5 from 'https://esm.sh/p5@1.9.0';\n`;
     }
-    if (libs.includes('p5.sound') && !sourceCode.includes("esm.sh/p5@") && !sourceCode.includes("p5.sound")) {
-        // p5.sound is a p5 addon, needs p5 to be loaded.
+    if (libsToImport.has('p5.sound') && !sourceCode.includes("p5.sound")) {
         imports += `import 'https://esm.sh/p5@1.9.0/lib/addons/p5.sound.js';\n`;
     }
-    if (libs.includes('matter-js') && !sourceCode.includes("esm.sh/matter-js")) {
+    if (libsToImport.has('matter-js') && !sourceCode.includes("esm.sh/matter-js")) {
         imports += `import Matter from 'https://esm.sh/matter-js@0.19.0';\n`;
     }
+    if (libsToImport.has('gsap') && !sourceCode.includes("esm.sh/gsap")) {
+        imports += `import { gsap } from 'https://esm.sh/gsap@3.12.5';\n`;
+    }
+    if (libsToImport.has('three') && !sourceCode.includes("esm.sh/three")) {
+        imports += `import * as THREE from 'https://esm.sh/three@0.161.0';\n`;
+    }
+    if (libsToImport.has('paper') && !sourceCode.includes("esm.sh/paper")) {
+        imports += `import paper from 'https://esm.sh/paper@0.12.17';\n`;
+    }
+
     return imports + sourceCode;
 }
 

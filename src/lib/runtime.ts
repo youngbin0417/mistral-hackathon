@@ -234,4 +234,9 @@ export const RUNTIME_CODE = `
         requestAnimationFrame(draw);
     }
     draw();
+
+    // Auto-trigger game_start event
+    setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('game_start'));
+    }, 500);
 `;

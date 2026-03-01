@@ -364,7 +364,7 @@ function registerGenerators() {
 
     javascriptGenerator.forBlock['magic_condition'] = function (block: Blockly.Block) {
         const prompt = block.getFieldValue('PROMPT').replace(/'/g, "\\'").replace(/"/g, '\\"');
-        return [`/* ✨ AI CONDITION: "${prompt}" */ true`, Order.ATOMIC];
+        return [`/* ✨ AI Request: "${prompt}" */ (true)`, Order.ATOMIC];
     };
 
     javascriptGenerator.forBlock['magic_styles'] = function (block: Blockly.Block) {
