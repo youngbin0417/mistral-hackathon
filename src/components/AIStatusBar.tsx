@@ -10,11 +10,11 @@ interface AIStatusBarProps {
 }
 
 const phases = [
-    { label: "Idle", icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: "text-[var(--neon-green)]" },
-    { label: "Interpreting Magic Block...", icon: <Sparkles className="w-3.5 h-3.5" />, color: "text-[var(--neon-pink)]" },
-    { label: "Generating Code...", icon: <Bot className="w-3.5 h-3.5" />, color: "text-[var(--neon-cyan)]" },
-    { label: "Refining & Optimizing...", icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />, color: "text-[var(--neon-purple)]" },
-    { label: "Complete! ✨", icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: "text-[var(--neon-green)]" },
+    { label: "system_idle", icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: "text-green-500" },
+    { label: "analyzing_magic_block...", icon: <Sparkles className="w-3.5 h-3.5" />, color: "text-[#F3ECE5]" },
+    { label: "codestral_generating...", icon: <Bot className="w-3.5 h-3.5" />, color: "text-[#FD5A1E]" },
+    { label: "refining_and_optimizing...", icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />, color: "text-[#FF733D]" },
+    { label: "execution_complete!", icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: "text-green-500" },
 ];
 
 export default function AIStatusBar({ isGenerating, isHealing, healingMessage }: AIStatusBarProps) {
@@ -44,26 +44,26 @@ export default function AIStatusBar({ isGenerating, isHealing, healingMessage }:
     }, [phase]);
 
     const current = isHealing
-        ? { label: healingMessage || "Self-Healing...", icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />, color: "text-[var(--neon-orange)]" }
+        ? { label: healingMessage || "self_healing_initiated...", icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />, color: "text-[#FD5A1E]" }
         : phases[phase];
 
     return (
-        <div className="flex items-center justify-between px-5 py-2.5 bg-[var(--card)]/80 backdrop-blur-md relative z-10 shadow-lg shadow-black/30">
+        <div className="flex items-center justify-between px-5 py-2.5 bg-[#0A0A0A] border-t border-b border-[#F3ECE5]/10 relative z-10 font-mono shadow-sm">
             <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                     <span className={current.color}>{current.icon}</span>
-                    <span className={`text-xs font-semibold ${current.color}`}>
-                        {current.label}
+                    <span className={`text-xs font-semibold uppercase tracking-widest ${current.color}`}>
+                        <span className="opacity-50">&gt; </span>{current.label}
                     </span>
                 </div>
 
                 {/* Progress dots */}
                 {isGenerating && (
-                    <div className="flex items-center gap-1 ml-2">
+                    <div className="flex items-center gap-1.5 ml-4">
                         {phases.slice(1, 5).map((_, i) => (
                             <div
                                 key={i}
-                                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i + 1 <= phase ? "bg-[var(--neon-cyan)]" : "bg-gray-700"
+                                className={`w-2 h-2 transition-all duration-300 ${i + 1 <= phase ? "bg-[#FD5A1E]" : "bg-[#F3ECE5]/20"
                                     }`}
                             />
                         ))}

@@ -3,25 +3,28 @@
 @import "tailwindcss";
 
 :root {
-    --background: #0d0d14;
-    --foreground: #e0e4ef;
+    --background: #000000;
+    --foreground: #F3ECE5;
 
-    --card: #12121c;
-    --card-foreground: #e0e4ef;
+    --card: #0A0A0A;
+    --card-foreground: #F3ECE5;
 
-    --border: #1e1e30;
-    --input: #1e1e30;
+    --border: rgba(243, 236, 229, 0.1);
+    --input: #111111;
 
-    --neon-cyan: #00e5ff;
-    --neon-pink: #ff00c8;
-    --neon-purple: #9000ff;
-    --neon-green: #00ff88;
-    --neon-orange: #ff8800;
-    --neon-yellow: #ffd500;
+    --neon-cyan: #FD5A1E;
+    /* Mistral Orange */
+    --neon-pink: #F3ECE5;
+    /* Mistral White */
+    --neon-purple: #FF733D;
+    /* Lighter Orange */
+    --neon-green: #4ade80;
+    --neon-orange: #FD5A1E;
+    --neon-yellow: #facc15;
 
-    --glow-cyan: 0 0 10px rgba(0, 229, 255, 0.5), 0 0 30px rgba(0, 229, 255, 0.2);
-    --glow-pink: 0 0 10px rgba(255, 0, 200, 0.5), 0 0 30px rgba(255, 0, 200, 0.2);
-    --glow-purple: 0 0 10px rgba(144, 0, 255, 0.5), 0 0 30px rgba(144, 0, 255, 0.2);
+    --glow-cyan: none;
+    --glow-pink: none;
+    --glow-purple: none;
 
     --radius: 1rem;
 }

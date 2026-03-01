@@ -173,10 +173,10 @@ export default function Home() {
 
             {/* Healing Notification Overlay */}
             {healingMessage && (
-                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] animate-bounce">
-                    <div className="bg-gradient-to-r from-[var(--neon-pink)] to-[var(--neon-purple)] text-white px-6 py-3 rounded-2xl glow-pink flex items-center gap-3">
+                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] animate-bounce font-mono">
+                    <div className="bg-[#FD5A1E] text-black px-6 py-3 rounded-none shadow-xl flex items-center gap-3 border border-[#F3ECE5]/20">
                         <Sparkles className="animate-spin" size={20} />
-                        <span className="font-bold">{healingMessage}</span>
+                        <span className="font-bold tracking-tight">&gt;&gt; {healingMessage}</span>
                     </div>
                 </div>
             )}
@@ -197,24 +197,24 @@ export default function Home() {
                     <Panel defaultSize={58} minSize={30} className="flex flex-col">
                         <div className="h-full flex flex-col">
                             {/* Code Header */}
-                            <div className="flex items-center justify-between px-4 py-3 bg-[var(--card)]/50 backdrop-blur-sm">
+                            <div className="flex items-center justify-between px-4 py-3 bg-[#0A0A0A] border-b border-[#F3ECE5]/10 font-mono">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-[var(--neon-green)] animate-pulse" />
-                                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Live Engine Code</p>
+                                    <div className="w-2 h-2 bg-green-500 animate-pulse" />
+                                    <p className="text-xs text-[#F3ECE5]/50 font-bold uppercase tracking-widest">Live_Engine_Code</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => openPreview()}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--neon-cyan)] to-[var(--neon-purple)] text-[var(--background)] text-sm font-bold glow-cyan hover:opacity-90 transition-opacity active:scale-95"
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#FD5A1E] text-black text-sm font-bold tracking-wide hover:bg-[#FF733D] transition-colors active:scale-95"
                                     >
                                         <Play size={14} fill="currentColor" />
-                                        Run Magic
+                                        EXECUTE
                                     </button>
                                     {/* Explain button */}
                                     <button
                                         onClick={handleExplain}
                                         title="Explain This Code"
-                                        className="p-1.5 rounded-lg hover:bg-[var(--neon-pink)]/10 text-[var(--neon-pink)] transition-colors hover:shadow-[0_0_10px_rgba(255,0,200,0.2)]"
+                                        className="p-2 border border-[#F3ECE5]/10 hover:border-[#FD5A1E] text-[#F3ECE5]/70 hover:text-[#FD5A1E] transition-colors"
                                     >
                                         <MessageCircleQuestion className="w-4 h-4" />
                                     </button>
@@ -222,11 +222,11 @@ export default function Home() {
                                     <button
                                         onClick={handleCopy}
                                         title="Copy code"
-                                        className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+                                        className="p-2 border border-[#F3ECE5]/10 hover:border-[#F3ECE5]/50 text-[#F3ECE5]/70 hover:text-[#F3ECE5] transition-colors"
                                     >
                                         {isCopied
-                                            ? <Check className="w-3.5 h-3.5 text-[var(--neon-green)]" />
-                                            : <Copy className="w-3.5 h-3.5 text-gray-500" />}
+                                            ? <Check className="w-4 h-4 text-green-500" />
+                                            : <Copy className="w-4 h-4" />}
                                     </button>
                                 </div>
                             </div>
@@ -244,7 +244,7 @@ export default function Home() {
 <head>
   <meta charset="UTF-8">
   <style>
-    body, html { margin: 0; padding: 0; background: #0a0a0f; color: #fff; width: 100%; height: 100%; overflow: hidden; }
+    body, html { margin: 0; padding: 0; background: #000000; color: #F3ECE5; width: 100%; height: 100%; overflow: hidden; font-family: monospace; }
     #app { width: 100%; height: 100%; position: relative; }
     canvas { pointer-events: none; }
   </style>
@@ -286,38 +286,38 @@ export default function Home() {
 
             {/* Explain Code Modal */}
             {isExplainModalOpen && (
-                <div className="fixed inset-0 z-[300] flex justify-center items-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-[var(--card)] w-full max-w-lg rounded-2xl border border-[var(--border)] shadow-2xl flex flex-col overflow-hidden">
-                        <div className="flex justify-between items-center p-4 border-b border-[var(--border)]">
-                            <h2 className="text-lg font-bold flex items-center gap-2 text-[var(--neon-pink)]">
-                                <MessageCircleQuestion className="w-5 h-5" />
-                                Explain This Code
+                <div className="fixed inset-0 z-[300] flex justify-center items-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+                    <div className="bg-[#0A0A0A] w-full max-w-lg border border-[#F3ECE5]/20 shadow-2xl flex flex-col font-mono">
+                        <div className="flex justify-between items-center p-4 border-b border-[#F3ECE5]/10 bg-[#111111]">
+                            <h2 className="text-sm font-bold flex items-center gap-2 text-[#FD5A1E]">
+                                <MessageCircleQuestion className="w-4 h-4" />
+                                system_explain
                             </h2>
-                            <button onClick={() => setIsExplainModalOpen(false)} className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+                            <button onClick={() => setIsExplainModalOpen(false)} className="hover:text-[#FD5A1E] text-[#F3ECE5]/40 transition-colors">
                                 <X size={18} />
                             </button>
                         </div>
                         <div className="p-6">
-                            <div className="bg-black/50 p-4 rounded-xl border border-[var(--border)] text-sm font-mono text-gray-300 overflow-y-auto max-h-32 mb-4">
+                            <div className="bg-black p-4 border border-[#F3ECE5]/10 text-xs text-[#F3ECE5]/60 overflow-y-auto max-h-32 mb-6">
                                 <pre>{code.split('\n').slice(0, 10).join('\n')}{code.split('\n').length > 10 ? '\n...' : ''}</pre>
                             </div>
                             <div className="min-h-[80px] flex items-center justify-center">
                                 {isExplaining ? (
                                     <div className="flex flex-col items-center gap-3">
-                                        <Sparkles className="w-6 h-6 text-[var(--neon-pink)] animate-spin" />
-                                        <p className="text-sm text-gray-400">Analyzing code...</p>
+                                        <Sparkles className="w-6 h-6 text-[#FD5A1E] animate-spin" />
+                                        <p className="text-sm text-[#F3ECE5]/40">Analyzing instructions...</p>
                                     </div>
                                 ) : (
-                                    <p className="text-base leading-relaxed text-gray-200">{explanation}</p>
+                                    <p className="text-sm leading-relaxed text-[#F3ECE5]/80 font-sans">{explanation}</p>
                                 )}
                             </div>
                         </div>
-                        <div className="p-4 border-t border-[var(--border)] flex justify-end">
+                        <div className="p-4 border-t border-[#F3ECE5]/10 flex justify-end bg-[#111111]">
                             <button
                                 onClick={() => setIsExplainModalOpen(false)}
-                                className="px-6 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors"
+                                className="px-6 py-2 border border-[#F3ECE5]/20 hover:border-[#F3ECE5]/50 text-[#F3ECE5] font-bold text-sm transition-colors"
                             >
-                                Got it!
+                                &gt; ack
                             </button>
                         </div>
                     </div>
@@ -326,57 +326,52 @@ export default function Home() {
 
             {/* Massive Preview Modal */}
             {isPreviewModalOpen && (
-                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 p-6 backdrop-blur-md">
+                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-6 backdrop-blur-md">
                     {/* Modal Header */}
-                    <div className="w-full max-w-6xl flex justify-between items-center p-4 bg-[var(--card)] border border-b-0 border-[var(--neon-cyan)]/30 rounded-t-2xl backdrop-blur-md">
-                        <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--neon-cyan)] text-glow-cyan">
-                            <Play size={18} fill="currentColor" />
-                            Live Magic Preview
+                    <div className="w-full max-w-6xl flex justify-between items-center px-4 py-3 bg-[#111111] border border-b-0 border-[#F3ECE5]/20 font-mono">
+                        <h3 className="text-sm font-bold flex items-center gap-2 text-[#FD5A1E]">
+                            <Play size={14} fill="currentColor" />
+                            live_magic_preview
                         </h3>
                         <button
                             onClick={() => setIsPreviewModalOpen(false)}
-                            className="text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-xl"
+                            className="text-[#F3ECE5]/50 hover:text-[#FD5A1E] transition-colors"
                         >
                             <X size={18} />
                         </button>
                     </div>
                     {/* Modal Body */}
-                    <div className="w-full max-w-6xl aspect-video bg-[#0d0d14] border border-t-0 border-[var(--neon-cyan)]/30 rounded-b-2xl overflow-hidden relative glow-cyan">
+                    <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-[#F3ECE5]/20 overflow-hidden relative">
 
                         {/* Empty state — no blocks dragged yet */}
                         {!hasCode && !isPreviewLoading && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                                <div className="w-16 h-16 rounded-2xl bg-[var(--neon-cyan)]/10 border border-[var(--neon-cyan)]/20 flex items-center justify-center">
-                                    <Blocks className="w-8 h-8 text-[var(--neon-cyan)]/50" />
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-gray-400 font-semibold">No blocks yet</p>
-                                    <p className="text-gray-600 text-sm mt-1">Drag some blocks onto the workspace first</p>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 border border-dashed border-[#F3ECE5]/10 m-8">
+                                <Blocks className="w-12 h-12 text-[#F3ECE5]/20" />
+                                <div className="text-center font-mono">
+                                    <p className="text-[#F3ECE5]/50 font-bold">No blocks detected</p>
+                                    <p className="text-[#F3ECE5]/30 text-xs mt-2">&gt; drag components to initiate sequence</p>
                                 </div>
                             </div>
                         )}
 
                         {/* Loading overlay */}
                         {isPreviewLoading && (
-                            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#0d0d14]">
-                                <div className="relative flex items-center justify-center mb-6">
-                                    {/* Outer spinning ring */}
-                                    <div className="w-20 h-20 rounded-full border-4 border-[var(--neon-cyan)]/20 border-t-[var(--neon-cyan)] animate-spin" />
-                                    {/* Inner pulsing dot */}
-                                    <div className="absolute w-8 h-8 rounded-full bg-[var(--neon-cyan)]/20 flex items-center justify-center">
-                                        <div className="w-3 h-3 rounded-full bg-[var(--neon-cyan)] animate-pulse" />
+                            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black font-mono">
+                                <div className="text-[#FD5A1E] flex flex-col items-center">
+                                    <div className="w-16 h-1 border-t border-b border-[#FD5A1E]/30 relative mb-4">
+                                        <div className="absolute inset-y-0 left-0 bg-[#FD5A1E] w-1/3 animate-ping" />
                                     </div>
+                                    <p className="text-sm font-bold tracking-widest uppercase">Initializing_Magic_Sequence</p>
+                                    <p className="text-[#F3ECE5]/40 text-xs mt-2">Compiling instructions...</p>
                                 </div>
-                                <p className="text-[var(--neon-cyan)] text-sm font-semibold tracking-widest uppercase animate-pulse">Initializing Magic...</p>
-                                <p className="text-gray-600 text-xs mt-1">Running your blocks</p>
                             </div>
                         )}
 
                         {isHealing && (
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
-                                <AlertCircle className="text-[var(--neon-pink)] mb-4 animate-pulse" size={48} />
-                                <h4 className="text-2xl font-bold text-white mb-2">Self-Healing in Progress</h4>
-                                <p className="text-[var(--neon-pink)] text-lg italic animate-pulse">&quot;{healingMessage}&quot;</p>
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center font-mono border-4 border-[#FD5A1E]/20">
+                                <AlertCircle className="text-[#FD5A1E] mb-4 animate-pulse" size={48} />
+                                <h4 className="text-xl font-bold text-[#F3ECE5] mb-2 uppercase tracking-wide">Self-Healing Protocol Engaged</h4>
+                                <p className="text-[#FD5A1E] text-sm">&gt; {healingMessage}</p>
                             </div>
                         )}
 
@@ -390,7 +385,7 @@ export default function Home() {
 <head>
   <meta charset="UTF-8">
   <style>
-    body, html { margin: 0; padding: 0; background: #0d0d14; color: #fff; width: 100%; height: 100%; overflow: hidden; }
+    body, html { margin: 0; padding: 0; background: #000000; color: #F3ECE5; width: 100%; height: 100%; overflow: hidden; font-family: monospace; }
     #app { width: 100%; height: 100%; position: relative; }
     canvas { display: block; }
   </style>
