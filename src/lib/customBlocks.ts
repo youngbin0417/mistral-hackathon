@@ -113,8 +113,11 @@ export function initializeCustomBlocks() {
     Blockly.Blocks['move_forward'] = {
         init: function () {
             this.jsonInit({
-                "message0": "Move Forward %1 units",
-                "args0": [{ "type": "field_number", "name": "AMOUNT", "value": 10 }],
+                "message0": "Move %1 Forward %2 units",
+                "args0": [
+                    { "type": "field_input", "name": "TARGET", "text": "Hero" },
+                    { "type": "field_number", "name": "AMOUNT", "value": 10 }
+                ],
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": "#4C97FF"
@@ -125,8 +128,11 @@ export function initializeCustomBlocks() {
     Blockly.Blocks['turn_right'] = {
         init: function () {
             this.jsonInit({
-                "message0": "Turn Right %1 degrees",
-                "args0": [{ "type": "field_number", "name": "DEGREES", "value": 90 }],
+                "message0": "Turn %1 Right %2 degrees",
+                "args0": [
+                    { "type": "field_input", "name": "TARGET", "text": "Hero" },
+                    { "type": "field_number", "name": "DEGREES", "value": 90 }
+                ],
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": "#4C97FF"
@@ -398,13 +404,15 @@ function registerGenerators() {
     };
 
     javascriptGenerator.forBlock['move_forward'] = function (block: Blockly.Block) {
+        const target = block.getFieldValue('TARGET');
         const amount = block.getFieldValue('AMOUNT');
-        return `if(typeof moveForward === "function") moveForward(${amount});\n`;
+        return `if(typeof moveForward === "function") moveForward("${target}", ${amount});\n`;
     };
 
     javascriptGenerator.forBlock['turn_right'] = function (block: Blockly.Block) {
+        const target = block.getFieldValue('TARGET');
         const degrees = block.getFieldValue('DEGREES');
-        return `if(typeof turnRight === "function") turnRight(${degrees});\n`;
+        return `if(typeof turnRight === "function") turnRight("${target}", ${degrees});\n`;
     };
 
     javascriptGenerator.forBlock['set_gravity'] = function (block: Blockly.Block) {

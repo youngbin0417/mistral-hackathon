@@ -90,16 +90,26 @@ export const RUNTIME_CODE = `
         }
     };
 
-    window.moveForward = (amount) => {
-        Object.values(window.entities).forEach(e => {
+    window.moveForward = (target, amount) => {
+        const move = (e) => {
             e.x += Math.cos(e.angle) * (amount || 1);
             e.y += Math.sin(e.angle) * (amount || 1);
-        });
+        };
+        if (!target || target === 'all') {
+            Object.values(window.entities).forEach(move);
+        } else if (window.entities[target]) {
+            move(window.entities[target]);
+        }
     };
 
-    window.turnRight = (deg) => {
+    window.turnRight = (target, deg) => {
         const rad = (deg * Math.PI) / 180;
-        Object.values(window.entities).forEach(e => e.angle += rad);
+        const turn = (e) => e.angle += rad;
+        if (!target || target === 'all') {
+            Object.values(window.entities).forEach(turn);
+        } else if (window.entities[target]) {
+            turn(window.entities[target]);
+        }
     };
 
     window.setGravity = (value) => { window.gravity = value; };
@@ -129,7 +139,7 @@ export const RUNTIME_CODE = `
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
                 life: 60,
-                color: \`hsl(\${Math.random() * 360}, 100%, 60%)\`
+                color: 'hsl(' + (Math.random() * 360) + ', 100%, 60%)'
             });
         }
     };
@@ -161,12 +171,7 @@ export const RUNTIME_CODE = `
             ctx.fillStyle = '#0d0d14';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            Object.values(window.entities).forEach(e => {
-                e.vy = (e.vy || 0) + (window.gravity || 0) * 0.1;
-                e.x += (e.vx || 0);
-                e.y += (e.vy || 0);
-            });
-
+            // Draw shapes (temporary)
             window._shapes = (window._shapes || []).filter(s => s.life-- > 0);
             window._shapes.forEach(s => {
                 ctx.fillStyle = '#00e5ff';
@@ -185,6 +190,7 @@ export const RUNTIME_CODE = `
                 ctx.fill();
             });
 
+            // Draw particles
             window._particles = (window._particles || []).filter(p => p.life-- > 0);
             window._particles.forEach(p => {
                 p.x += p.vx; p.y += p.vy;
@@ -194,7 +200,36 @@ export const RUNTIME_CODE = `
             });
             ctx.globalAlpha = 1;
 
-            Object.entries(window.entities).forEach(([name, e]) => {
+            // Handle Entities: Physics, Collision, Drawing
+            const entitiesArr = Object.entries(window.entities);
+            for (let i = 0; i < entitiesArr.length; i++) {
+                const [name, e] = entitiesArr[i];
+                
+                // Physics update
+                e.vy = (e.vy || 0) + (window.gravity || 0) * 0.1;
+                e.x += (e.vx || 0);
+                e.y += (e.vy || 0);
+
+                // Simple Circle Collision Check
+                for (let j = i + 1; j < entitiesArr.length; j++) {
+                    const [name2, e2] = entitiesArr[j];
+                    const dx = e.x - e2.x;
+                    const dy = e.y - e2.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist < 30) { 
+                        const now = Date.now();
+                        const pairId = [name, name2].sort().join('_');
+                        if (!window._collisionCooldowns) window._collisionCooldowns = {};
+                        
+                        if (!window._collisionCooldowns[pairId] || now - window._collisionCooldowns[pairId] > 1000) {
+                            window._collisionCooldowns[pairId] = now;
+                            document.dispatchEvent(new CustomEvent('game_damage', { detail: { target: name, source: name2 } }));
+                            window.explodeParticles(15, (e.x + e2.x)/2, (e.y + e2.y)/2);
+                        }
+                    }
+                }
+
                 ctx.save();
                 ctx.translate(e.x, e.y);
                 ctx.rotate(e.angle);
@@ -217,7 +252,7 @@ export const RUNTIME_CODE = `
                     ctx.fillStyle = '#000';
                     ctx.fillText(e.speaking, e.x - tw/2, e.y - 28);
                 }
-            });
+            }
 
             if (window.score) {
                 ctx.fillStyle = '#00e5ff';

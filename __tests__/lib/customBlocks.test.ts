@@ -40,7 +40,7 @@ describe('Custom Blocks Integration', () => {
             const block = workspace.newBlock('magic_condition');
             block.setFieldValue('test prompt', 'PROMPT');
             const code = javascriptGenerator.blockToCode(block) as [string, number];
-            expect(code[0]).toContain('/* ✨ AI CONDITION: "test prompt" */ true');
+            expect(code[0]).toContain('/* ✨ AI Request: "test prompt" */ (true)');
         });
 
         it('generates correct JS for magic_styles', () => {
@@ -48,7 +48,8 @@ describe('Custom Blocks Integration', () => {
             block.setFieldValue('bg', 'TARGET');
             block.setFieldValue('red', 'PROMPT');
             const code = javascriptGenerator.blockToCode(block) as string;
-            expect(code).toContain("AI_MAGIC_STYLE: bg -> red");
+            expect(code).toContain('/* ✨ AI Request: "Style bg like red" */');
+            expect(code).toContain("AI_MAGIC_STYLE: Style bg like red");
         });
 
         it('generates correct JS for draw_shape', () => {
@@ -58,6 +59,22 @@ describe('Custom Blocks Integration', () => {
             block.setFieldValue(200, 'Y');
             const code = javascriptGenerator.blockToCode(block) as string;
             expect(code).toContain('drawShape("circle", 150, 200)');
+        });
+
+        it('generates correct JS for move_forward with target', () => {
+            const block = workspace.newBlock('move_forward');
+            block.setFieldValue('Hero', 'TARGET');
+            block.setFieldValue(10, 'AMOUNT');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('moveForward("Hero", 10)');
+        });
+
+        it('generates correct JS for turn_right with target', () => {
+            const block = workspace.newBlock('turn_right');
+            block.setFieldValue('Enemy', 'TARGET');
+            block.setFieldValue(90, 'DEGREES');
+            const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('turnRight("Enemy", 90)');
         });
 
         it('generates correct JS for apply_force', () => {
@@ -120,6 +137,7 @@ describe('Custom Blocks Integration', () => {
             const block = workspace.newBlock('remix_code_block');
             block.setFieldValue('make it faster', 'PROMPT');
             const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('/* ✨ AI Request: "make it faster" */');
             expect(code).toContain('AI_MAGIC_REMIX: make it faster');
         });
 
@@ -127,6 +145,7 @@ describe('Custom Blocks Integration', () => {
             const block = workspace.newBlock('add_feature_block');
             block.setFieldValue('add a power-up', 'PROMPT');
             const code = javascriptGenerator.blockToCode(block) as string;
+            expect(code).toContain('/* ✨ AI Request: "add a power-up" */');
             expect(code).toContain('AI_MAGIC_ADD: add a power-up');
         });
     });
