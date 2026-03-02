@@ -421,6 +421,7 @@ export default function Home() {
                                 className="w-full h-full border-none"
                                 title="Magic Preview"
                                 onLoad={handleIframeLoad}
+                                allow="autoplay"
                                 src={blobUrl}
                             />
                         </div>

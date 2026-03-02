@@ -95,6 +95,25 @@ export const RUNTIME_CODE = `
             if (style === 'robot') voiceId = 'tx3xgqwjuJCIPX6B28xE';
             if (style === 'alien') voiceId = 'yoZ06aMxZJJ28mfd3POQ';
             
+            // Fallback: use browser built-in SpeechSynthesis
+            const fallbackSpeak = () => {
+                if (window.speechSynthesis) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 1.0;
+                    utterance.pitch = style === 'robot' ? 0.5 : style === 'villain' ? 0.7 : 1.0;
+                    if (window.entities[character]) {
+                        window.entities[character].speaking = text;
+                        utterance.onend = () => { window.entities[character].speaking = null; resolve(); };
+                    } else {
+                        utterance.onend = () => resolve();
+                    }
+                    window.speechSynthesis.speak(utterance);
+                } else {
+                    console.warn('No TTS available');
+                    resolve();
+                }
+            };
+
             try {
                 const res = await fetch('/api/main/speak', {
                     method: 'POST',
@@ -102,7 +121,9 @@ export const RUNTIME_CODE = `
                     body: JSON.stringify({ text, voiceId })
                 });
                 if (res.ok) {
-                    const audio = new Audio(URL.createObjectURL(await res.blob()));
+                    const blob = await res.blob();
+                    if (blob.size <= 1) { fallbackSpeak(); return; }
+                    const audio = new Audio(URL.createObjectURL(blob));
                     
                     if (window.entities[character]) {
                         window.entities[character].speaking = text;
@@ -113,11 +134,12 @@ export const RUNTIME_CODE = `
                     } else {
                         audio.onended = resolve;
                     }
-                    audio.play();
+                    audio.play().catch(() => { fallbackSpeak(); });
                 } else {
-                    resolve();
+                    console.warn('TTS API failed, using browser fallback');
+                    fallbackSpeak();
                 }
-            } catch(e) { console.error('Audio error', e); resolve(); }
+            } catch(e) { console.error('Audio error', e); fallbackSpeak(); }
         });
     };
 
