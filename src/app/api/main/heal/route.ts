@@ -13,7 +13,7 @@ export async function POST(req: Request) {
         }
 
         const ip = req.headers.get('x-forwarded-for') || 'anonymous';
-        const ratelimit = await rateLimit(`heal:${ip}`, 10, 60);
+        const ratelimit = await rateLimit(`heal:${ip}`, 1000, 60);
 
         if (!ratelimit.success) {
             return NextResponse.json(
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
         const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
 
-        const SYSTEM_PROMPT = `You are an expert debugger and coding mentor.
+        const SYSTEM_PROMPT = `You are an expert debugger and coding mentor for the Blockstral game engine.
 The user's block program has a runtime error.
 
 ERROR MESSAGE: "${error}"
@@ -40,12 +40,21 @@ YOUR TASK:
 2. Fix the code so it runs perfectly.
 3. Provide a very simple explanation of the fix in English.
 
+CRITICAL RUNTIME ENVIRONMENT RULES (you MUST follow these):
+- p5.js and Matter.js are loaded via CDN <script> tags as GLOBALS. They are NOT modules.
+- If p5.js is used, it MUST stay in GLOBAL MODE: top-level "function setup()" and "function draw()".
+- NEVER convert code to p5.js instance mode ("new p5(function(p) { ... })"). This BREAKS the runtime.
+- NEVER add import or require statements. All libraries are already available as globals.
+- The runtime provides global helper functions: createSprite(), moveForward(), turnRight(), setGravity(), applyForce(), drawShape(), explodeParticles(), addScore(), playBGM(), speakText(), setVoiceStyle(), dialogueScene(), onFrame(), applyStyle(). These are defined on the window object.
+- The code runs inside an async IIFE wrapper, so top-level await is valid.
+- If you see "await is only valid in async functions", ensure await is NOT inside a non-async nested function.
+
 IMPORTANT RULES:
 - Return a JSON object with two fields: "fixedCode" (string) and "explanation" (string in English).
 - ALL explanations and comments MUST be in English. NEVER use Korean.
 - Return ONLY the raw JSON. No markdown blocks.
 - Preserve the user's creative intent.
-- Ensure only one library (p5.js OR Matter.js) is used correctly.
+- Keep the code in the SAME style/mode as the original. Do NOT restructure it.
 `;
 
         const chatResponse = await client.chat.complete({

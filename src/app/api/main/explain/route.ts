@@ -12,7 +12,7 @@ export async function POST(req: Request) {
         }
 
         const ip = req.headers.get('x-forwarded-for') || 'anonymous';
-        const ratelimit = await rateLimit(`explain:${ip}`, 10, 60);
+        const ratelimit = await rateLimit(`explain:${ip}`, 1000, 60);
 
         if (!ratelimit.success) {
             return NextResponse.json(

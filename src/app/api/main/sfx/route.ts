@@ -4,7 +4,7 @@ import { rateLimit } from '@/lib/rateLimit';
 export async function POST(req: Request) {
     try {
         const ip = req.headers.get('x-forwarded-for') || 'anonymous';
-        const ratelimit = await rateLimit(`sfx:${ip}`, 20, 60);
+        const ratelimit = await rateLimit(`sfx:${ip}`, 1000, 60);
 
         if (!ratelimit.success) {
             return NextResponse.json(

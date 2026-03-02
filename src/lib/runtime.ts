@@ -210,17 +210,20 @@ export const RUNTIME_CODE = `
 
     // ── Canvas setup ─────────────────────────────────────────────────────
     const app = document.getElementById('app');
-    // Clean up existing canvases to prevent duplication on reload
-    if (app) {
-        const existingCanvases = app.querySelectorAll('canvas');
-        existingCanvases.forEach(c => c.remove());
+    let canvas = null;
+    let ctx = null;
+    if (!window._skipRuntimeLoop) {
+        // Clean up any pre-existing canvases from previous runs
+        if (app) {
+            const existingCanvases = app.querySelectorAll('canvas');
+            existingCanvases.forEach(c => c.remove());
+        }
+        canvas = document.createElement('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        if (app) app.appendChild(canvas);
+        ctx = canvas.getContext('2d');
     }
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    if (app) app.appendChild(canvas);
-    const ctx = canvas.getContext('2d');
 
     // ── Style Helper (for Magic Styles) ──────────────────────────────────
     window.applyStyle = (config) => {
@@ -238,7 +241,14 @@ export const RUNTIME_CODE = `
     window.onFrame = (fn) => { if (typeof fn === 'function') window.onFrameHandlers.push(fn); };
 
     function draw() {
-        // ... (existing canvas logic)
+        if (window._skipRuntimeLoop) {
+            // Only run registered frame handlers, skip canvas drawing
+            window.onFrameHandlers.forEach(handler => {
+                try { handler(); } catch(e) { console.error('Frame handler error', e); }
+            });
+            requestAnimationFrame(draw);
+            return;
+        }
         // Run the main draw loop
         canvas.style.display = 'block';
         
@@ -357,7 +367,6 @@ export const RUNTIME_CODE = `
                 ctx.font = 'bold 20px monospace';
                 ctx.fillText('Score: ' + window.score, 16, 36);
             }
-        }
 
         // Run all registered frame handlers
         window.onFrameHandlers.forEach(handler => {

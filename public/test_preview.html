@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Preview Test</title>
+<style>
+body { margin: 0; background: #111; color: #fff; font-family: monospace; }
+iframe { width: 100%; height: 80vh; border: 2px solid lime; }
+button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 10px; }
+#status { padding: 10px; color: lime; }
+</style>
+</head>
+<body>
+<h2>Preview iframe Test</h2>
+<button onclick="testRuntime()">Test 1: Runtime Only (drawShape)</button>
+<button onclick="testP5()">Test 2: p5.js Sparkle</button>
+<button onclick="testSimple()">Test 3: Simple Canvas</button>
+<div id="status">Click a button to test</div>
+<iframe id="preview"></iframe>
+
+<script>
+function testSimple() {
+    const html = [
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+        '<style>body{margin:0;background:#1a1a1e;}</style>',
+        '</head><body>',
+        '<canvas id="c" width="800" height="600"></canvas>',
+        '<script>',
+        'var c = document.getElementById("c");',
+        'var ctx = c.getContext("2d");',
+        'ctx.fillStyle = "lime";',
+        'ctx.fillRect(100, 100, 200, 200);',
+        'ctx.fillStyle = "white";',
+        'ctx.font = "30px monospace";',
+        'ctx.fillText("PREVIEW WORKS!", 110, 210);',
+        '<\/script>',
+        '</body></html>'
+    ].join('\n');
+    
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    document.getElementById('preview').src = url;
+    document.getElementById('status').textContent = 'Test 3: Simple canvas - should show green box with text';
+}
+
+function testP5() {
+    const html = [
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"><\/script>',
+        '<style>body{margin:0;background:#1a1a1e;overflow:hidden;}</style>',
+        '</head><body>',
+        '<script>',
+        'let sparkles = [];',
+        'function setup() {',
+        '  createCanvas(windowWidth, windowHeight);',
+        '  background(0);',
+        '  noStroke();',
+        '  // Auto-create sparkles for demo',
+        '  for (let i = 0; i < 50; i++) {',
+        '    sparkles.push({ x: random(width), y: random(height), size: random(5,20), alpha: 255, speed: random(1,5), angle: random(TWO_PI), r: random(255), g: random(255), b: random(255) });',
+        '  }',
+        '}',
+        'function draw() {',
+        '  background(0, 20);',
+        '  for (let i = sparkles.length - 1; i >= 0; i--) {',
+        '    let s = sparkles[i];',
+        '    s.x += cos(s.angle) * s.speed;',
+        '    s.y += sin(s.angle) * s.speed;',
+        '    s.alpha -= 2;',
+        '    fill(s.r, s.g, s.b, s.alpha);',
+        '    ellipse(s.x, s.y, s.size);',
+        '    if (s.alpha <= 0) { s.alpha = 255; s.x = random(width); s.y = random(height); }',
+        '  }',
+        '  fill(255);',
+        '  textSize(24);',
+        '  text("P5 PREVIEW WORKS!", 20, 40);',
+        '}',
+        '<\/script>',
+        '</body></html>'
+    ].join('\n');
+    
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    document.getElementById('preview').src = url;
+    document.getElementById('status').textContent = 'Test 2: p5.js sparkle - should show colorful particles';
+}
+
+function testRuntime() {
+    const html = [
+        '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+        '<style>body{margin:0;background:#1a1a1e;color:#F3ECE5;}</style>',
+        '</head><body>',
+        '<div id="app"></div>',
+        '<script>',
+        'var canvas = document.createElement("canvas");',
+        'canvas.width = 800; canvas.height = 600;',
+        'document.getElementById("app").appendChild(canvas);',
+        'var ctx = canvas.getContext("2d");',
+        'ctx.fillStyle = "#0d0d14";',
+        'ctx.fillRect(0, 0, 800, 600);',
+        'ctx.fillStyle = "#00e5ff";',
+        'ctx.font = "bold 30px monospace";',
+        'ctx.fillText("RUNTIME PREVIEW WORKS!", 50, 100);',
+        'ctx.beginPath();',
+        'ctx.arc(400, 300, 50, 0, Math.PI * 2);',
+        'ctx.fillStyle = "#FD5A1E";',
+        'ctx.fill();',
+        '<\/script>',
+        '</body></html>'
+    ].join('\n');
+    
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    document.getElementById('preview').src = url;
+    document.getElementById('status').textContent = 'Test 1: Runtime canvas - should show cyan text and orange circle';
+}
+</script>
+</body>
+</html>

@@ -83,6 +83,12 @@ export default function Home() {
     const { code, setCode, codeRef, injectedLibs, isGenerating, handleCodeChange } = useAiGeneration(`// Start dragging blocks!`);
     const { isHealing, healingMessage, lastError, handleHeal } = useSelfHealer(codeRef, setCode);
 
+    // Strip import lines before sending to iframe preview — p5/matter are loaded via CDN <script> tags
+    const previewCode = code
+        .split('\n')
+        .filter(line => !line.trimStart().startsWith('import '))
+        .join('\n');
+
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             if (event.data && event.data.type === 'error' && event.data.message && !isHealing && event.data.message !== lastError) {
@@ -118,7 +124,7 @@ export default function Home() {
         }
     };
 
-    const hasCode = code.trim().length > 0;
+    const hasCode = previewCode.trim().length > 0;
 
     const [isCopied, setIsCopied] = useState(false);
     const handleCopy = () => {
@@ -239,28 +245,10 @@ export default function Home() {
                                         template="vanilla"
                                         theme="dark"
                                         files={{
-                                            "/index.js": `console.log("index.js started");\n` + code,
-                                            "/index.html": `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body, html { margin: 0; padding: 0; background: #000000; color: #F3ECE5; width: 100%; height: 100%; overflow: hidden; font-family: monospace; }
-    #app { width: 100%; height: 100%; position: relative; }
-    canvas { pointer-events: none; }
-  </style>
-</head>
-<body>
-  <div id="app"></div>
-  <script>
-    ${RUNTIME_CODE}
-  </script>
-  <script src="index.js"></script>
-</body>
-</html>`
+                                            "/index.js": previewCode,
                                         }}
-                                        customSetup={{
-                                            dependencies: SANDPACK_LIBRARIES
+                                        options={{
+                                            autorun: false,
                                         }}
                                     >
                                         <SandpackLayout style={{ height: "100%", width: "100%", borderRadius: 0, border: 'none', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
@@ -326,103 +314,119 @@ export default function Home() {
             )}
 
             {/* Massive Preview Modal */}
-            {isPreviewModalOpen && (
-                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-6 backdrop-blur-md">
-                    {/* Modal Header */}
-                    <div className="w-full max-w-6xl flex justify-between items-center px-4 py-3 bg-[#111111] border border-b-0 border-[#F3ECE5]/20 font-mono">
-                        <h3 className="text-sm font-bold flex items-center gap-2 text-[#FD5A1E]">
-                            <Play size={14} fill="currentColor" />
-                            live_magic_preview
-                        </h3>
-                        <button
-                            onClick={() => setIsPreviewModalOpen(false)}
-                            className="text-[#F3ECE5]/50 hover:text-[#FD5A1E] transition-colors"
-                        >
-                            <X size={18} />
-                        </button>
-                    </div>
-                    {/* Modal Body */}
-                    <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-[#F3ECE5]/20 overflow-hidden relative">
+            {isPreviewModalOpen && (() => {
+                const usesP5 = previewCode.includes('function setup()') || previewCode.includes('function draw()') || previewCode.includes('createCanvas');
 
-                        {/* Empty state — no blocks dragged yet */}
-                        {!hasCode && !isPreviewLoading && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 border border-dashed border-[#F3ECE5]/10 m-8">
-                                <Blocks className="w-12 h-12 text-[#F3ECE5]/20" />
-                                <div className="text-center font-mono">
-                                    <p className="text-[#F3ECE5]/50 font-bold">No blocks detected</p>
-                                    <p className="text-[#F3ECE5]/30 text-xs mt-2">&gt; drag components to initiate sequence</p>
+                // Build clean user code: strip imports
+                let cleanCode = previewCode
+                    .split('\n')
+                    .filter(line => {
+                        const t = line.trim();
+                        return !t.startsWith('import ') && !t.startsWith('import{');
+                    })
+                    .join('\n');
+
+                let htmlParts: string[];
+
+                if (usesP5) {
+                    // p5.js MODE: Do NOT wrap in async IIFE — p5 needs global setup()/draw()
+                    // Load p5 CDN BEFORE user code, but user code runs in a normal <script>
+                    // so setup/draw are defined at global scope where p5 can find them.
+                    htmlParts = [
+                        '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+                        '<style>body,html{margin:0;padding:0;background:#1a1a1e;color:#F3ECE5;width:100%;height:100%;overflow:hidden;font-family:Fredoka,sans-serif}canvas{display:block}</style>',
+                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"><\/script>',
+                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"><\/script>',
+                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"><\/script>',
+                        '</head><body>',
+                        '<script>window.addEventListener("error",function(e){console.error("Runtime Error:",e.message);window.parent.postMessage({type:"error",message:e.message},"*")})<\/script>',
+                        '<script>',
+                        cleanCode,
+                        '<\/script>',
+                        '</body></html>'
+                    ];
+                } else {
+                    // NON-p5 MODE: Use runtime canvas + async IIFE for await support
+                    const wrappedCode = '(async function(){\n' + cleanCode + '\n})();';
+                    htmlParts = [
+                        '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"><\/script>',
+                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"><\/script>',
+                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"><\/script>',
+                        '<style>body,html{margin:0;padding:0;background:#1a1a1e;color:#F3ECE5;width:100%;height:100%;overflow:hidden;font-family:Fredoka,sans-serif}#app{width:100%;height:100%;position:relative}canvas{display:block}</style>',
+                        '</head><body><div id="app"></div>',
+                        '<script>',
+                        RUNTIME_CODE,
+                        '<\/script>',
+                        '<script>window.addEventListener("error",function(e){console.error("Runtime Error:",e.message);window.parent.postMessage({type:"error",message:e.message},"*")})<\/script>',
+                        '<script>',
+                        wrappedCode,
+                        '<\/script>',
+                        '</body></html>'
+                    ];
+                }
+                const htmlString = htmlParts.join('\n');
+                const blob = new Blob([htmlString], { type: 'text/html' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                return (
+                    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-6 backdrop-blur-md">
+                        {/* Modal Header */}
+                        <div className="w-full max-w-6xl flex justify-between items-center px-4 py-3 bg-[#111111] border border-b-0 border-[#F3ECE5]/20 font-mono">
+                            <h3 className="text-sm font-bold flex items-center gap-2 text-[#FD5A1E]">
+                                <Play size={14} fill="currentColor" />
+                                live_magic_preview
+                            </h3>
+                            <button
+                                onClick={() => { setIsPreviewModalOpen(false); URL.revokeObjectURL(blobUrl); }}
+                                className="text-[#F3ECE5]/50 hover:text-[#FD5A1E] transition-colors"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                        {/* Modal Body */}
+                        <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-[#F3ECE5]/20 overflow-hidden relative">
+
+                            {/* Empty state — no blocks dragged yet */}
+                            {!hasCode && !isPreviewLoading && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 border border-dashed border-[#F3ECE5]/10 m-8">
+                                    <Blocks className="w-12 h-12 text-[#F3ECE5]/20" />
+                                    <div className="text-center font-mono">
+                                        <p className="text-[#F3ECE5]/50 font-bold">No blocks detected</p>
+                                        <p className="text-[#F3ECE5]/30 text-xs mt-2">&gt; drag components to initiate sequence</p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Loading overlay */}
-                        {isPreviewLoading && (
-                            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black font-mono">
-                                <div className="text-[#FD5A1E] flex flex-col items-center">
-                                    <MistralCat size="large" className="mb-8" />
-                                    <p className="text-sm font-bold tracking-widest uppercase animate-pulse">Initializing_Magic_Sequence</p>
-                                    <p className="text-[#F3ECE5]/40 text-xs mt-2">Compiling instructions...</p>
+                            {/* Loading overlay */}
+                            {isPreviewLoading && (
+                                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black font-mono">
+                                    <div className="text-[#FD5A1E] flex flex-col items-center">
+                                        <MistralCat size="large" className="mb-8" />
+                                        <p className="text-sm font-bold tracking-widest uppercase animate-pulse">Initializing_Magic_Sequence</p>
+                                        <p className="text-[#F3ECE5]/40 text-xs mt-2">Compiling instructions...</p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {isHealing && (
-                            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center font-mono border-4 border-[#FD5A1E]/20">
-                                <AlertCircle className="text-[#FD5A1E] mb-4 animate-pulse" size={48} />
-                                <h4 className="text-xl font-bold text-[#F3ECE5] mb-2 uppercase tracking-wide">Self-Healing Protocol Engaged</h4>
-                                <p className="text-[#FD5A1E] text-sm">&gt; {healingMessage}</p>
-                            </div>
-                        )}
+                            {isHealing && (
+                                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center font-mono border-4 border-[#FD5A1E]/20">
+                                    <AlertCircle className="text-[#FD5A1E] mb-4 animate-pulse" size={48} />
+                                    <h4 className="text-xl font-bold text-[#F3ECE5] mb-2 uppercase tracking-wide">Self-Healing Protocol Engaged</h4>
+                                    <p className="text-[#FD5A1E] text-sm">&gt; {healingMessage}</p>
+                                </div>
+                            )}
 
-                        <iframe
-                            className="w-full h-full border-none"
-                            title="Magic Preview"
-                            sandbox="allow-scripts allow-modals allow-same-origin"
-                            onLoad={handleIframeLoad}
-                            srcDoc={`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-  <style>
-    body, html { margin: 0; padding: 0; background: #1a1a1e; color: #F3ECE5; width: 100%; height: 100%; overflow: hidden; font-family: Fredoka, sans-serif; }
-    #app { width: 100%; height: 100%; position: relative; }
-    canvas { display: block; }
-  </style>
-</head>
-<body>
-  <div id="app"></div>
-  <script>
-    ${RUNTIME_CODE}
-  </script>
-  <script>
-    // Error handling to communicate back to parent frame for self-healing
-    window.addEventListener('error', (e) => {
-      console.error('Runtime Error:', e.message);
-      window.parent.postMessage({ type: 'error', message: e.message }, '*');
-    });
-
-    // Strip out all ESM imports from the code as we are loading via script tags
-    const cleanCode = \`${code.replace(/import\s+[\s\S]+?from\s+['"].+?['"];?\n?/g, '')}\`;
-
-    // Execute the code. Since we want setup() and draw() to be global for p5,
-    // we use a regular script tag/eval approach or just wrap in an async function.
-    try {
-        const script = document.createElement('script');
-        script.text = cleanCode;
-        document.body.appendChild(script);
-    } catch (err) {
-        console.error('Execution Error:', err);
-    }
-  </script>
-</body>
-</html>`}
-                        />
+                            <iframe
+                                className="w-full h-full border-none"
+                                title="Magic Preview"
+                                onLoad={handleIframeLoad}
+                                src={blobUrl}
+                            />
+                        </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
         </div>
     );
 }

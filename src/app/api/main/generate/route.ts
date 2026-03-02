@@ -14,7 +14,7 @@ export async function POST(req: Request) {
         }
 
         const ip = req.headers.get('x-forwarded-for') || 'anonymous';
-        const ratelimit = await rateLimit(`generate:${ip}`, 10, 60);
+        const ratelimit = await rateLimit(`generate:${ip}`, 1000, 60);
 
         if (!ratelimit.success) {
             return NextResponse.json(
@@ -50,14 +50,23 @@ export async function POST(req: Request) {
             serverURL: process.env.MISTRAL_API_URL || undefined
         });
 
-        const SYSTEM_PROMPT = `You are a professional creative coder. 
-The user will provide a prompt for a visual or interactive effect. 
+        const SYSTEM_PROMPT = `You are a professional creative coder.
+The user will provide a prompt for a visual or interactive effect.
 Generate the most high-quality, impressive, and complete JavaScript code possible using p5.js or Matter.js.
-Return ONLY raw JavaScript code. 
-DO NOT use markdown code blocks. 
+
+CRITICAL RUNTIME ENVIRONMENT RULES:
+- p5.js and Matter.js are already loaded via CDN <script> tags. They are available as GLOBALS.
+- You MUST use p5.js in GLOBAL MODE: define top-level "function setup()" and "function draw()" directly.
+- NEVER use p5.js instance mode (e.g., "new p5(function(p) { ... })"). This will break the runtime.
+- NEVER use import or require statements. All libraries are pre-loaded globals.
+- The runtime also provides these global helper functions: createSprite(), moveForward(), turnRight(), setGravity(), applyForce(), drawShape(), explodeParticles(), addScore(), playBGM(), playSFX(), speakText(), setVoiceStyle(), dialogueScene(), onFrame(), applyStyle(). You may call them directly if relevant.
+- The page has a <div id="app"> element. p5.js createCanvas() will handle its own canvas.
+
+Return ONLY raw JavaScript code.
+DO NOT use markdown code blocks.
 DO NOT include explanations unless they are in code comments.
 ALL code comments and names MUST be strictly in English.
-Ensure the code is self-contained and runs immediately.`;
+Ensure the code runs immediately when evaluated.`;
 
         // Step 1: Draft Code Generation (Creative Phase)
         const chatResponse = await client.chat.complete({
@@ -78,6 +87,8 @@ Review the following drafted JavaScript code.
 2. Remove completely any markdown code blocks (e.g., \`\`\`javascript).
 3. Detect which frontend libraries are required. We currently support: "p5", "p5.sound", "matter-js".
 4. Ensure all comments and variable names are strictly in English.
+5. CRITICAL: If p5.js is used, it MUST be in GLOBAL mode (top-level "function setup()" and "function draw()"). If the code uses instance mode ("new p5(function(p) { ... })"), REWRITE it to global mode. Replace all "p.xxx" calls with direct p5 global calls (e.g., p.createCanvas -> createCanvas, p.background -> background).
+6. Remove ALL import/require statements. Libraries are loaded via CDN.
 
 You MUST return ONLY a valid JSON object with exactly this structure:
 {
@@ -110,6 +121,16 @@ You MUST return ONLY a valid JSON object with exactly this structure:
         if (generatedCode.startsWith('```')) {
             generatedCode = generatedCode.replace(/^```[a-z]*\n/, '').replace(/\n```$/, '');
         }
+
+        // Strip import statements — libraries are injected via CDN <script> tags, not ESM imports
+        generatedCode = generatedCode
+            .split('\n')
+            .filter((line: string) => {
+                const t = line.trim();
+                return !t.startsWith('import ') && !t.startsWith('import{');
+            })
+            .join('\n')
+            .trim();
 
         // Combine AI detected libs with rule-based detection for maximum safety
         const detectedLibraries = new Set<string>(finalResponseData.libraries || []);
