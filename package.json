@@ -2,6 +2,7 @@
   "name": "blockstral",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "predev": "node -e \"const fs = require('fs'); if (!fs.existsSync('.env')) { fs.copyFileSync('.env.example', '.env'); console.log('Created .env file. Please add your MISTRAL_API_KEY!'); }\"",
     "dev": "next dev",
