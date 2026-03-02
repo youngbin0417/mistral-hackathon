@@ -13,7 +13,12 @@ export const RUNTIME_CODE = `
     window.gameStarted = false;
 
     // ── Audio ────────────────────────────────────────────────────────────
+    window._bgmMood = null;
     window.playBGM = (mood) => {
+        // Idempotent: skip if same mood is already playing
+        if (window._bgmMood === mood && window.bgmAudio) return;
+        window._bgmMood = mood;
+
         if (window.bgmAudio) { 
             if (window.bgmAudio.osc) { 
                 window.bgmAudio.osc.stop(); 
@@ -58,7 +63,11 @@ export const RUNTIME_CODE = `
         } catch(e) { console.error('BGM error', e); }
     };
 
+    window._sfxPlaying = {};
     window.playSFX = async (prompt) => {
+        // Idempotent: skip if same SFX is already playing/loading
+        if (window._sfxPlaying[prompt]) return;
+        window._sfxPlaying[prompt] = true;
         try {
             const res = await fetch('/api/main/sfx', {
                 method: 'POST',
@@ -67,28 +76,40 @@ export const RUNTIME_CODE = `
             });
             if (res.ok) {
                 const audio = new Audio(URL.createObjectURL(await res.blob()));
-                audio.play();
+                audio.onended = () => { window._sfxPlaying[prompt] = false; };
+                audio.play().catch(() => { window._sfxPlaying[prompt] = false; });
+            } else {
+                window._sfxPlaying[prompt] = false;
             }
-        } catch(e) { console.error('SFX error', e); }
+        } catch(e) { console.error('SFX error', e); window._sfxPlaying[prompt] = false; }
     };
 
+    window._freqPlaying = {};
     window.playFrequency = (hz, ms) => {
+        // Idempotent: skip if same frequency is already playing
+        const key = hz + '_' + ms;
+        if (window._freqPlaying[key]) return;
+        window._freqPlaying[key] = true;
         try {
             const ctx2 = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx2.createOscillator();
             osc.connect(ctx2.destination);
             osc.frequency.value = hz;
             osc.start();
-            setTimeout(() => { osc.stop(); ctx2.close(); }, ms);
-        } catch(e) { console.error('Frequency error', e); }
+            setTimeout(() => { osc.stop(); ctx2.close(); window._freqPlaying[key] = false; }, ms);
+        } catch(e) { console.error('Frequency error', e); window._freqPlaying[key] = false; }
     };
 
     // ── Voice ────────────────────────────────────────────────────────────
     window.voiceStyles = {};
     window.setVoiceStyle = (character, style) => { window.voiceStyles[character] = style; };
 
+    window._isSpeaking = false;
     window.speakText = (text, character) => {
         return new Promise(async (resolve) => {
+            // Idempotent: skip if already speaking
+            if (window._isSpeaking) { resolve(); return; }
+            window._isSpeaking = true;
             const style = window.voiceStyles[character] || 'default';
             let voiceId = 'pNInz6obpgDQGcFmaJcg'; // default: Adam
             if (style === 'villain') voiceId = 'ErXwobaYiN019PkySvjV';
@@ -140,6 +161,7 @@ export const RUNTIME_CODE = `
                     fallbackSpeak();
                 }
             } catch(e) { console.error('Audio error', e); fallbackSpeak(); }
+            window._isSpeaking = false;
         });
     };
 
@@ -211,7 +233,12 @@ export const RUNTIME_CODE = `
         window._shapes.push({ shape, x, y, life: 60 });
     };
 
+    window._lastExplodeTime = 0;
     window.explodeParticles = (count, x, y) => {
+        // Cooldown: max once per 100ms to prevent onFrame spam
+        const now = Date.now();
+        if (now - window._lastExplodeTime < 100) return;
+        window._lastExplodeTime = now;
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 4 + 1;

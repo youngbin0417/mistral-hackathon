@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { SandpackProvider, SandpackLayout, SandpackCodeEditor } from "@codesandbox/sandpack-react";
 import { Play, X, Sparkles, AlertCircle, Blocks, Copy, Check, MessageCircleQuestion } from "lucide-react";
 import dynamic from 'next/dynamic';
@@ -81,9 +81,81 @@ export default function Home() {
     };
 
     const { code, setCode, codeRef, injectedLibs, isGenerating, handleCodeChange } = useAiGeneration(`// Start dragging blocks!`);
-    const { isHealing, healingMessage, lastError, handleHeal } = useSelfHealer(codeRef, setCode);
 
-    // Strip import lines before sending to iframe preview — p5/matter are loaded via CDN <script> tags
+    // ── iframe ref for self-heal auto-restart ──────────────────────────
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    // Keep a stable ref to the latest blobUrl so heal callback can revoke it
+    const blobUrlRef = useRef<string | null>(null);
+
+    // Build the preview HTML blob URL from a code string
+    const buildBlobUrl = useCallback((rawCode: string): string => {
+        const cleanCode = rawCode
+            .split('\n')
+            .filter(line => {
+                const t = line.trim();
+                return !t.startsWith('import ') && !t.startsWith('import{');
+            })
+            .join('\n');
+
+        const usesP5 = cleanCode.includes('function setup()') ||
+            cleanCode.includes('function draw()') ||
+            cleanCode.includes('createCanvas');
+
+        let htmlParts: string[];
+        if (usesP5) {
+            htmlParts = [
+                '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+                '<style>body,html{margin:0;padding:0;background:#1a1a1e;color:#F3ECE5;width:100%;height:100%;overflow:hidden;font-family:Fredoka,sans-serif}canvas{display:block}</style>',
+                '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"><\/script>',
+                '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"><\/script>',
+                '<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"><\/script>',
+                '</head><body>',
+                '<script>window.addEventListener("error",function(e){window.parent.postMessage({type:"error",message:e.message},"*")});window.addEventListener("unhandledrejection",function(e){window.parent.postMessage({type:"error",message:e.reason?.message||String(e.reason)},"*")})<\/script>',
+                '<script>',
+                cleanCode,
+                '<\/script>',
+                '</body></html>'
+            ];
+        } else {
+            const wrappedCode = '(async function(){\n' + cleanCode + '\n})();';
+            htmlParts = [
+                '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+                '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"><\/script>',
+                '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"><\/script>',
+                '<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"><\/script>',
+                '<style>body,html{margin:0;padding:0;background:#1a1a1e;color:#F3ECE5;width:100%;height:100%;overflow:hidden;font-family:Fredoka,sans-serif}#app{width:100%;height:100%;position:relative}canvas{display:block}</style>',
+                '</head><body><div id="app"></div>',
+                '<script>',
+                RUNTIME_CODE,
+                '<\/script>',
+                '<script>window.addEventListener("error",function(e){window.parent.postMessage({type:"error",message:e.message},"*")});window.addEventListener("unhandledrejection",function(e){window.parent.postMessage({type:"error",message:e.reason?.message||String(e.reason)},"*")})<\/script>',
+                '<script>',
+                wrappedCode,
+                '<\/script>',
+                '</body></html>'
+            ];
+        }
+        const html = htmlParts.join('\n');
+        return URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    }, []);
+
+    // Called by useSelfHealer when the fix is ready — restart iframe with healed code
+    const handleHealComplete = useCallback((fixedCode: string) => {
+        if (!iframeRef.current) return;
+        // Revoke old blob to avoid memory leak
+        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+        const newUrl = buildBlobUrl(fixedCode);
+        blobUrlRef.current = newUrl;
+        iframeRef.current.src = newUrl;
+    }, [buildBlobUrl]);
+
+    const { isHealing, healingMessage, lastError, handleHeal } = useSelfHealer(
+        codeRef,
+        setCode,
+        handleHealComplete
+    );
+
+    // Strip import lines for Sandpack code viewer (not for preview)
     const previewCode = code
         .split('\n')
         .filter(line => !line.trimStart().startsWith('import '))
@@ -91,7 +163,13 @@ export default function Home() {
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
-            if (event.data && event.data.type === 'error' && event.data.message && !isHealing && event.data.message !== lastError) {
+            if (
+                event.data &&
+                event.data.type === 'error' &&
+                event.data.message &&
+                !isHealing &&
+                event.data.message !== lastError
+            ) {
                 handleHeal(event.data.message);
             }
         };
@@ -106,6 +184,9 @@ export default function Home() {
     const openPreview = () => {
         setIsPreviewLoading(true);
         setIsPreviewModalOpen(true);
+        // Pre-build the blob URL when the modal opens
+        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = buildBlobUrl(code);
         // Always show loader for at least 800ms, then hide it
         if (previewLoadTimerRef.current) clearTimeout(previewLoadTimerRef.current);
         previewLoadTimerRef.current = setTimeout(() => {
@@ -314,120 +395,71 @@ export default function Home() {
             )}
 
             {/* Massive Preview Modal */}
-            {isPreviewModalOpen && (() => {
-                const usesP5 = previewCode.includes('function setup()') || previewCode.includes('function draw()') || previewCode.includes('createCanvas');
-
-                // Build clean user code: strip imports
-                let cleanCode = previewCode
-                    .split('\n')
-                    .filter(line => {
-                        const t = line.trim();
-                        return !t.startsWith('import ') && !t.startsWith('import{');
-                    })
-                    .join('\n');
-
-                let htmlParts: string[];
-
-                if (usesP5) {
-                    // p5.js MODE: Do NOT wrap in async IIFE — p5 needs global setup()/draw()
-                    // Load p5 CDN BEFORE user code, but user code runs in a normal <script>
-                    // so setup/draw are defined at global scope where p5 can find them.
-                    htmlParts = [
-                        '<!DOCTYPE html><html><head><meta charset="UTF-8">',
-                        '<style>body,html{margin:0;padding:0;background:#1a1a1e;color:#F3ECE5;width:100%;height:100%;overflow:hidden;font-family:Fredoka,sans-serif}canvas{display:block}</style>',
-                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"><\/script>',
-                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"><\/script>',
-                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"><\/script>',
-                        '</head><body>',
-                        '<script>window.addEventListener("error",function(e){console.error("Runtime Error:",e.message);window.parent.postMessage({type:"error",message:e.message},"*")})<\/script>',
-                        '<script>',
-                        cleanCode,
-                        '<\/script>',
-                        '</body></html>'
-                    ];
-                } else {
-                    // NON-p5 MODE: Use runtime canvas + async IIFE for await support
-                    const wrappedCode = '(async function(){\n' + cleanCode + '\n})();';
-                    htmlParts = [
-                        '<!DOCTYPE html><html><head><meta charset="UTF-8">',
-                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"><\/script>',
-                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"><\/script>',
-                        '<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"><\/script>',
-                        '<style>body,html{margin:0;padding:0;background:#1a1a1e;color:#F3ECE5;width:100%;height:100%;overflow:hidden;font-family:Fredoka,sans-serif}#app{width:100%;height:100%;position:relative}canvas{display:block}</style>',
-                        '</head><body><div id="app"></div>',
-                        '<script>',
-                        RUNTIME_CODE,
-                        '<\/script>',
-                        '<script>window.addEventListener("error",function(e){console.error("Runtime Error:",e.message);window.parent.postMessage({type:"error",message:e.message},"*")})<\/script>',
-                        '<script>',
-                        wrappedCode,
-                        '<\/script>',
-                        '</body></html>'
-                    ];
-                }
-                const htmlString = htmlParts.join('\n');
-                const blob = new Blob([htmlString], { type: 'text/html' });
-                const blobUrl = URL.createObjectURL(blob);
-
-                return (
-                    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-6 backdrop-blur-md">
-                        {/* Modal Header */}
-                        <div className="w-full max-w-6xl flex justify-between items-center px-4 py-3 bg-[#111111] border border-b-0 border-[#F3ECE5]/20 font-mono">
-                            <h3 className="text-sm font-bold flex items-center gap-2 text-[#FD5A1E]">
-                                <Play size={14} fill="currentColor" />
-                                live_magic_preview
-                            </h3>
-                            <button
-                                onClick={() => { setIsPreviewModalOpen(false); URL.revokeObjectURL(blobUrl); }}
-                                className="text-[#F3ECE5]/50 hover:text-[#FD5A1E] transition-colors"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-                        {/* Modal Body */}
-                        <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-[#F3ECE5]/20 overflow-hidden relative">
-
-                            {/* Empty state — no blocks dragged yet */}
-                            {!hasCode && !isPreviewLoading && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 border border-dashed border-[#F3ECE5]/10 m-8">
-                                    <Blocks className="w-12 h-12 text-[#F3ECE5]/20" />
-                                    <div className="text-center font-mono">
-                                        <p className="text-[#F3ECE5]/50 font-bold">No blocks detected</p>
-                                        <p className="text-[#F3ECE5]/30 text-xs mt-2">&gt; drag components to initiate sequence</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Loading overlay */}
-                            {isPreviewLoading && (
-                                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black font-mono">
-                                    <div className="text-[#FD5A1E] flex flex-col items-center">
-                                        <MistralCat size="large" className="mb-8" />
-                                        <p className="text-sm font-bold tracking-widest uppercase animate-pulse">Initializing_Magic_Sequence</p>
-                                        <p className="text-[#F3ECE5]/40 text-xs mt-2">Compiling instructions...</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {isHealing && (
-                                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center font-mono border-4 border-[#FD5A1E]/20">
-                                    <AlertCircle className="text-[#FD5A1E] mb-4 animate-pulse" size={48} />
-                                    <h4 className="text-xl font-bold text-[#F3ECE5] mb-2 uppercase tracking-wide">Self-Healing Protocol Engaged</h4>
-                                    <p className="text-[#FD5A1E] text-sm">&gt; {healingMessage}</p>
-                                </div>
-                            )}
-
-                            <iframe
-                                className="w-full h-full border-none"
-                                title="Magic Preview"
-                                onLoad={handleIframeLoad}
-                                allow="autoplay"
-                                src={blobUrl}
-                            />
-                        </div>
+            {isPreviewModalOpen && (
+                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 p-6 backdrop-blur-md">
+                    {/* Modal Header */}
+                    <div className="w-full max-w-6xl flex justify-between items-center px-4 py-3 bg-[#111111] border border-b-0 border-[#F3ECE5]/20 font-mono">
+                        <h3 className="text-sm font-bold flex items-center gap-2 text-[#FD5A1E]">
+                            <Play size={14} fill="currentColor" />
+                            live_magic_preview
+                        </h3>
+                        <button
+                            onClick={() => {
+                                setIsPreviewModalOpen(false);
+                                if (blobUrlRef.current) { URL.revokeObjectURL(blobUrlRef.current); blobUrlRef.current = null; }
+                            }}
+                            className="text-[#F3ECE5]/50 hover:text-[#FD5A1E] transition-colors"
+                        >
+                            <X size={18} />
+                        </button>
                     </div>
-                );
-            })()}
+                    {/* Modal Body */}
+                    <div className="w-full max-w-6xl aspect-video bg-black border border-t-0 border-[#F3ECE5]/20 overflow-hidden relative">
+
+                        {/* Empty state — no blocks dragged yet */}
+                        {!hasCode && !isPreviewLoading && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 border border-dashed border-[#F3ECE5]/10 m-8">
+                                <Blocks className="w-12 h-12 text-[#F3ECE5]/20" />
+                                <div className="text-center font-mono">
+                                    <p className="text-[#F3ECE5]/50 font-bold">No blocks detected</p>
+                                    <p className="text-[#F3ECE5]/30 text-xs mt-2">&gt; drag components to initiate sequence</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Loading overlay */}
+                        {isPreviewLoading && (
+                            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black font-mono">
+                                <div className="text-[#FD5A1E] flex flex-col items-center">
+                                    <MistralCat size="large" className="mb-8" />
+                                    <p className="text-sm font-bold tracking-widest uppercase animate-pulse">Initializing_Magic_Sequence</p>
+                                    <p className="text-[#F3ECE5]/40 text-xs mt-2">Compiling instructions...</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Self-Healing Overlay */}
+                        {isHealing && (
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center font-mono border-4 border-[#FD5A1E]/20">
+                                <AlertCircle className="text-[#FD5A1E] mb-4 animate-pulse" size={48} />
+                                <h4 className="text-xl font-bold text-[#F3ECE5] mb-2 uppercase tracking-wide">Self-Healing Protocol Engaged</h4>
+                                <p className="text-[#FD5A1E] text-sm">&gt; {healingMessage}</p>
+                                <p className="text-[#F3ECE5]/30 text-xs mt-4">Preview will restart automatically after fix</p>
+                            </div>
+                        )}
+
+                        {/* The iframe — src is managed via ref for heal-restart */}
+                        <iframe
+                            ref={iframeRef}
+                            className="w-full h-full border-none"
+                            title="Magic Preview"
+                            onLoad={handleIframeLoad}
+                            allow="autoplay"
+                            src={blobUrlRef.current ?? undefined}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

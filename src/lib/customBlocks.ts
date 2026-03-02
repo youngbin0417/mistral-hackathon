@@ -535,7 +535,7 @@ function registerGenerators() {
 
     javascriptGenerator.forBlock['when_clicked'] = function (block: Blockly.Block) {
         const branch = javascriptGenerator.statementToCode(block, 'STACK') || "";
-        return `document.getElementById('app').addEventListener('click', function() {\n${branch}});\n`;
+        return `(function(){ var el = document.getElementById('app') || document.body; el.addEventListener('click', function() {\n${branch}}); })();\n`;
     };
 
     javascriptGenerator.forBlock['always_loop'] = function (block: Blockly.Block) {

@@ -10,7 +10,7 @@ export interface RateLimitResult {
 
 export async function rateLimit(
     identifier: string,
-    limit: number = 10,
+    limit: number = 1000,
     windowSeconds: number = 60
 ): Promise<RateLimitResult> {
     const key = `ratelimit:${identifier}`;
